@@ -35,22 +35,22 @@ Python:3.9.25
 > pip install paddlepaddle
 
 ## 3. 查詢各套件版本
-[python]
-python --version
+[python]<br>
+python --version<br>
 =>3.9.25
 
-[numpy]
-python -c "import numpy; print(numpy.__version__)"
+[numpy]<br>
+python -c "import numpy; print(numpy.__version__)"<br>
 =>1.24.3
 
-[paddlepaddle]
-python -c "import paddle; print('paddle OK:', paddle.__version__)"
+[paddlepaddle]<br>
+python -c "import paddle; print('paddle OK:', paddle.__version__)"<br>
 =>3.0.0-rc1
 
-[paddleocr]
-pip show paddleocr | findstr Version
+[paddleocr]<br>
+pip show paddleocr | findstr Version<br>
 =>2.10.0
 
-[opencv]
-python -c "import cv2; print('OpenCV 版本:', cv2.__version__)"
+[opencv]<br>
+python -c "import cv2; print('OpenCV 版本:', cv2.__version__)"<br>
 => 4.10.0
