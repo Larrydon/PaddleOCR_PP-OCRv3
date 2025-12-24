@@ -1,4 +1,4 @@
-﻿# Fork from [PaddleOCR-2.10.0](https://github.com/PaddlePaddle/PaddleOCR/tree/v2.10.0)
+﻿# Fork from [PaddleOCR-2.10.0](https://github.com/PaddlePaddle/PaddleOCR/tree/v2.10.0)<br>
 https://github.com/PaddlePaddle/PaddleOCR/releases?page=2
 (docs\Releases-v2.10.0-PaddlePaddle-PaddleOCRv-github.com.mhtml)<br>
 <br>
