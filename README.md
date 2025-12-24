@@ -1,6 +1,7 @@
-﻿# Fork from [PaddleOCR-2.10.0](https://github.com/PaddlePaddle/PaddleOCR/tree/v2.10.0)<br>
-https://github.com/PaddlePaddle/PaddleOCR/releases?page=2
-(docs\Releases-v2.10.0-PaddlePaddle-PaddleOCRv-github.com.mhtml)<br>
+﻿# Fork from [PaddleOCR-2.10.0](https://github.com/PaddlePaddle/PaddleOCR/tree/v2.10.0)
+
+https://github.com/PaddlePaddle/PaddleOCR/releases?page=2<br>
+(docs\Releases-v2.10.0-PaddlePaddle-PaddleOCRv-github.com.mhtml)
 <br>
 <br>
 將使用 PP-OCRv3 版本中的 [ch_PP-OCRv3_rec_slim](https://www.paddleocr.ai/v2.10.0/ppocr/model_list.html#21) 模型來開發車牌辨識<br>
@@ -20,12 +21,12 @@ ch_PP-OCRv3_rec_slim	slim量化版超轻量模型，支持中英文、数字识�
 Python:3.9.25
 
 ## 1. 完全清理
-pip uninstall paddlepaddle paddleocr paddlehub numpy opencv-contrib-python opencv-python -y
+> pip uninstall paddlepaddle paddleocr paddlehub numpy opencv-contrib-python opencv-python -y
 
-pip cache purge
+> pip cache purge
 
 ## 2. 安裝
-pip install -r requirements.txt
+> pip install -r requirements.txt
 
 您的机器安装的是CUDA 11，请运行以下命令安装
 > pip install paddlepaddle-gpu
@@ -52,4 +53,4 @@ pip show paddleocr | findstr Version
 
 [opencv]
 python -c "import cv2; print('OpenCV 版本:', cv2.__version__)"
-=> 4.10.0P
+=> 4.10.0
