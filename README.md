@@ -10,8 +10,10 @@ ch_PP-OCRv3_rec_slim	slim量化版超轻量模型，支持中英文、数字识�
 [训练模型](https://paddleocr.bj.bcebos.com/PP-OCRv3/chinese/ch_PP-OCRv3_rec_slim_train.tar)
 <br>
 <br>
+<br>
+<br>
 參考來源:
-模型庫 https://www.paddleocr.ai/v2.10.0/ppocr/model_list.html#21
+模型庫 https://www.paddleocr.ai/v2.10.0/ppocr/model_list.html#21<br>
 (docs\PaddleOCR-v2.10.0_PP-OCR_模型列表.mhtml)
 <br>
 <br>
