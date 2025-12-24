@@ -3,8 +3,8 @@ https://github.com/PaddlePaddle/PaddleOCR/releases?page=2
 (docs\Releases-v2.10.0-PaddlePaddle-PaddleOCRv-github.com.mhtml)<br>
 <br>
 <br>
-將使用 PP-OCRv3 版本中的 [ch_PP-OCRv3_rec_slim](https://www.paddleocr.ai/v2.10.0/ppocr/model_list.html#21) 模型來開發車牌辨識
-ch_PP-OCRv3_rec_slim	slim量化版超轻量模型，支持中英文、数字识别	ch_PP-OCRv3_rec_distillation.yml	4.9M
+將使用 PP-OCRv3 版本中的 [ch_PP-OCRv3_rec_slim](https://www.paddleocr.ai/v2.10.0/ppocr/model_list.html#21) 模型來開發車牌辨識<br>
+ch_PP-OCRv3_rec_slim	slim量化版超轻量模型，支持中英文、数字识别	ch_PP-OCRv3_rec_distillation.yml	4.9M<br>
 [推理模型](https://paddleocr.bj.bcebos.com/PP-OCRv3/chinese/ch_PP-OCRv3_rec_slim_infer.tar)
 [训练模型](https://paddleocr.bj.bcebos.com/PP-OCRv3/chinese/ch_PP-OCRv3_rec_slim_train.tar)
 <br>
@@ -12,9 +12,10 @@ ch_PP-OCRv3_rec_slim	slim量化版超轻量模型，支持中英文、数字识�
 參考來源:
 模型庫 https://www.paddleocr.ai/v2.10.0/ppocr/model_list.html#21
 (docs\PaddleOCR-v2.10.0_PP-OCR_模型列表.mhtml)
-
-
-
+<br>
+<br>
+<br>
+<br>
 ## 環境設定
 Python:3.9.25
 
@@ -51,4 +52,4 @@ pip show paddleocr | findstr Version
 
 [opencv]
 python -c "import cv2; print('OpenCV 版本:', cv2.__version__)"
-=> 4.10.0
+=> 4.10.0P
