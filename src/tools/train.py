@@ -66,6 +66,7 @@ def main(config, device, logger, vdl_writer, seed):
     else:
         valid_dataloader = None
     step_pre_epoch = len(train_dataloader)
+    logger.debug(f"[DEBUG] step_pre_epoch = {step_pre_epoch}")
 
     # build post process
     post_process_class = build_post_process(config["PostProcess"], global_config)

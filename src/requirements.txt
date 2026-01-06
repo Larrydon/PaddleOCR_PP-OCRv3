@@ -1,12 +1,14 @@
+numpy==1.24.3
+paddlepaddle==3.0.0rc1
+paddleocr==2.10.0
+opencv-python==4.10.0
+#opencv-contrib-python
 shapely
 scikit-image
 pyclipper
 lmdb
 tqdm
-numpy
 rapidfuzz
-opencv-python
-opencv-contrib-python
 cython
 Pillow
 pyyaml
