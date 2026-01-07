@@ -23,7 +23,7 @@ ch_PP-OCRv3_rec_slim	slim量化版超轻量模型，支持中英文、数字识�
 Python:3.9.25
 
 ### 1. 完全清理
-> pip uninstall paddlepaddle paddleocr paddlehub numpy opencv-contrib-python opencv-python -y
+> pip uninstall paddlepaddle paddleocr paddlehub numpy opencv-contrib-python opencv-python -y<br>
 > pip cache purge
 
 <br>
