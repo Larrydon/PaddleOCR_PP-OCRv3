@@ -107,8 +107,38 @@ python -c "import cv2; print('OpenCV 版本:', cv2.__version__)"<br>
 
 ## 使用(已整合到 .vscode\launch.json)
 
+### 3種資料集
+三種數據集的區別為了讓模型訓練更科學，通常我們會將數據分為以下三類：<br>
+數據類型作用您的現狀訓練集 (Train Set)給模型「讀書」用的。模型會反覆看這些圖來學習特徵。train_list.txt <br>
+驗證集 (Eval Set)給模型「模擬考」用的。模型不看答案，考考看學得如何。val_list.txt <br>
+測試集 (Test Set)「真實戰場」。完全沒在清單內，直接拿一張新照片來辨識。非清單內的獨立圖片 <br>
+
 ### 訓練 tools\train.py
 > python3 tools/train.py -c configs/rec/PP-OCRv3/en_PP-OCRv3_rec.yml -o Global.pretrained_model=./pretrain_models/en_PP-OCRv3_rec_train/best_accuracy
+
+訓練次數達到 .yml 設定檔中的 eval_batch_step 範圍次數就會去自動執行 eval.py<br>
+讓最好的權重自動更新成 best_accuracy.pdparams
+
+最後跑完 500迴圈的結果(根據 rec_carplate_train_gpu.yml 的設定 epoch_num: 500)
+> 
+[2026-01-07 16:01:41,507] ppocr INFO: best metric, acc: 0.12499984375019532, is_float16: False, norm_edit_dis: 0.4220245319931446, Teacher_acc: 0.24999968750039064, Teacher_norm_edit_dis: 0.44702450074318356, fps: 115.20755908972299, best_epoch: 500<br>
+[2026-01-07 16:01:44,721] ppocr INFO: save model in ./output/rec_ppocr_v3_distillation/latest<br>
+[2026-01-07 16:01:48,068] ppocr INFO: save model in ./output/rec_ppocr_v3_distillation/iter_epoch_500<br>
+[2026-01-07 16:01:48,068] ppocr INFO: best metric, acc: 0.12499984375019532, is_float16: False, norm_edit_dis: 0.4220245319931446, Teacher_acc: 0.24999968750039064, Teacher_norm_edit_dis: 0.44702450074318356, fps: 115.20755908972299, best_epoch: 500<br>
+
+數據解讀：模型現在的實力(訓練結果跑驗證)<br>
+- acc: 0.1249 (12.5%) 這代表在你的 8 筆驗證資料中，只認對了 1 張。剩下的 7 張全都認錯了（OCR 的 Acc 要求是文字內容 100% 完全正確才算對）。<br>
+- norm_edit_dis: 0.422 這是「正規化編輯距離」。數值越接近 1 越好。0.42 代表平均來說，一張車牌如果你有 7 個字，它可能只認對了 2~3 個字，或者順序完全亂掉。<br>
+- Teacher_acc: 0.249 (25%) 老師模型（Teacher）認對了 2 張。這說明即便是結構更複雜的老師模型，目前的表現也很差。<br>
+
+
+### 評估(也就是驗證) tools\eval.py
+這是讓您在訓練結束後，或是想要針對某個特定的權重檔案（例如 iter_epoch_1000.pdparams）進行詳細檢查時手動使用的<br>
+
+驗證模型的「真實實力」<br>
+如果 acc > 0.9 即可導出模型使用了<br>
+如果 acc 還是很低，但  norm_edit_dis 很高，代表模型認得出字，但容易混淆相似字（例如 8 和 B、0 和 D）。<br>
+> python3 tools/train.py -c configs/rec/PP-OCRv3/en_PP-OCRv3_rec.yml -o Global.pretrained_model=./pretrain_models/en_PP-OCRv3_rec_train/iter_epoch_1000
 
 <br>
 <br>

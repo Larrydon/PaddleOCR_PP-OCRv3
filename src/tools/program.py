@@ -815,6 +815,27 @@ def preprocess(is_train=False):
     log_ranks = config["Global"].get("log_ranks", "0")
     logger = get_logger(log_file=log_file, log_ranks=log_ranks)
 
+    # --- 強制掛載檔案日誌處理器 ---
+    if log_file is not None:
+        import logging
+        # 檢查是否已經有 FileHandler，避免重複掛載
+        has_file_handler = any(isinstance(h, logging.FileHandler) for h in logger.handlers)
+        
+        if not has_file_handler:
+            # 建立檔案處理器
+            formatter = logging.Formatter('[%(asctime)s] %(name)s %(levelname)s: %(message)s')
+            # mode='a' 代表續寫，'w' 代表覆蓋
+            fh = logging.FileHandler(log_file, mode='a', encoding='utf-8')
+            fh.setFormatter(formatter)
+            fh.setLevel(logging.INFO)
+            logger.addHandler(fh)
+            
+            logger.info(f"系統自動掛載失敗，已手動強制掛載 FileHandler。")
+            logger.info(f"日誌檔案路徑: {log_file}")
+    
+    logger.info(f"當前 logger 處理器數量: {len(logger.handlers)}")
+    # ---------------------------
+
     # check if set use_gpu=True in paddlepaddle cpu version
     use_gpu = config["Global"].get("use_gpu", False)
     use_xpu = config["Global"].get("use_xpu", False)

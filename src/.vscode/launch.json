@@ -13,15 +13,28 @@
 	  },
 	  {
 		"name": "Python 偵錯工具: train.py",
-		"type": "python",
+		"type": "debugpy",
 		"request": "launch",
 		"program": "${workspaceFolder}/tools/train.py",
 		"console": "integratedTerminal",
 		//CPU
-		"args": ["-c", "configs/rec/PP-OCRv3/rec_carplate_train_cpu.yml"],
+		//"args": ["-c", "configs/rec/PP-OCRv3/rec_carplate_train_cpu.yml"],
 		//GPU
-		//"args": ["-c", "configs/rec/PP-OCRv3/rec_carplate_train_gpu.yml"],
+		"args": ["-c", "configs/rec/PP-OCRv3/rec_carplate_train_gpu.yml"],
 		"cwd": "${workspaceFolder}"
+	  },
+	  {
+		"name": "Python 偵錯工具: eval.py",
+		"type": "debugpy",
+		"request": "launch",
+		"program": "${workspaceFolder}/tools/eval.py",
+		"console": "integratedTerminal",
+		"args": [
+		  "-c",
+		  "configs/rec/PP-OCRv3/rec_carplate_train_gpu.yml",
+		  "-o",
+		  "Global.pretrained_model=./output/rec_ppocr_v3_distillation/best_accuracy"
+		]
 	  }
 	]
   }

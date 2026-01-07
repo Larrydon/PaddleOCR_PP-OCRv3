@@ -5,12 +5,12 @@ Global:
   use_gpu: True
   epoch_num: 500
   log_smooth_window: 20
-  print_batch_step: 10 # 日志打印步数间隔，根据需要自行设置合适的数值
+  print_batch_step: 20 # 日志打印步数间隔，根据需要自行设置合适的数值
 
   save_model_dir: ./output/rec_ppocr_v3_distillation/  # 训练模型保存目录
-  save_epoch_step: 20  # 检查点保存轮次间隔，根据需要自行设置合适的数值
+  save_epoch_step: 100  # 检查点保存轮次间隔，根据需要自行设置合适的数值
   
-  eval_batch_step: -1 # 預設值 [0, 2000]，表示0~2000 內，依照 print_batch_step 次數評估 #=0 不可設定0，要用-1來禁用，只參考 print_batch_step
+  eval_batch_step: [0, 100] # 預設值 [0, 2000]，表示0~2000 內
   cal_metric_during_train: True
   
   
@@ -31,7 +31,7 @@ Global:
   max_text_length: &max_text_length 16 #128 # 能够识别的最长文本长度，根据需要自行设置合适的数值
   use_space_char: False # 是否识别空格字符
   infer_mode: False
-  distributed: True
+  distributed: False # True 如果你的電腦只有一張顯卡，請確保：False 分散式模式在小數據上會浪費很多時間在進程間通訊
   save_res_path: ./output/rec/predicts_ppocrv3_distillation.txt  # 使用 tools/infer_rec.py（預測腳本）將預測結果存下來的路徑
   d2s_train_image_shape: [3, 48, -1]
 
@@ -192,9 +192,9 @@ Train:
         - valid_ratio
   loader:
     shuffle: true
-    batch_size_per_card: 16 #128
-    drop_last: True #False
-    num_workers: 4
+    batch_size_per_card: 12 #128
+    drop_last: False # 數據這麼少，絕對不能 drop
+    num_workers: 0 # 數據少，用 0 避免多線程切換開銷
 
 Eval:
   dataset:
@@ -219,5 +219,5 @@ Eval:
   loader:
     shuffle: false
     drop_last: false
-    batch_size_per_card: 8  #128
-    num_workers: 4
+    batch_size_per_card: 4  #128
+    num_workers: 0
