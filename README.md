@@ -22,37 +22,90 @@ ch_PP-OCRv3_rec_slim	slim量化版超轻量模型，支持中英文、数字识�
 ## 環境設定
 Python:3.9.25
 
-## 1. 完全清理
+### 1. 完全清理
 > pip uninstall paddlepaddle paddleocr paddlehub numpy opencv-contrib-python opencv-python -y
-
 > pip cache purge
-
-## 2. 安裝
+<br>
+<br>
+### 2. 安裝
 > pip install -r requirements.txt
-
-您的机器安装的是CUDA 11，请运行以下命令安装
-> pip install paddlepaddle-gpu
 
 若是只使用CPU測試，可以省略，已安裝在 requirements.txt 裡面了
 > pip install paddlepaddle
 
-## 3. 查詢各套件版本
-[python]<br>
-python --version<br>
+您的机器安装的是CUDA 11(GPU)，请运行以下命令安装
+> pip install paddlepaddle-gpu
+
+但是 requirements.txt 已經先安裝了 paddlepaddle，所以GPU版本的要重裝
+> pip uninstall paddlepaddle-gpu paddlepaddle -y
+
+#### 安裝支援 CUDA 11.8 的 2.6 版本(根據您的 CUDA 調整，假設您的 CUDA 是 11.x)
+> python -m pip install paddlepaddle-gpu==2.6.1 -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+#### CUDA 版本查詢
+> nvcc -V
+=>	
+	nvcc: NVIDIA (R) Cuda compiler driver
+	Copyright (c) 2005-2022 NVIDIA Corporation
+	Built on Wed_Sep_21_10:33:58_PDT_2022
+	Cuda compilation tools, release 11.8, V11.8.89
+	Build cuda_11.8.r11.8/compiler.31833905_0
+
+#### 驗證 paddlepaddle-gpu 安裝是否成功
+> python -c "import paddle; paddle.utils.run_check()"
+=>	
+	Running verify PaddlePaddle program ...
+	I0107 08:31:00.438566 412716 program_interpreter.cc:212] New Executor is Running.
+	W0107 08:31:00.438954 412716 gpu_resources.cc:119] Please NOTE: device: 0, GPU Compute Capability: 7.5, Driver API Version: 12.4, Runtime API Version: 11.8
+	W0107 08:31:00.468246 412716 gpu_resources.cc:164] device: 0, cuDNN Version: 8.9.
+	I0107 08:31:00.765264 412716 interpreter_util.cc:624] Standalone Executor is Used.
+	PaddlePaddle works well on 1 GPU.
+	PaddlePaddle is installed successfully! Let's start deep learning with PaddlePaddle now.
+
+
+### 3. 查詢各套件版本
+[python]
+python --version
 =>3.9.25
 
-[numpy]<br>
-python -c "import numpy; print(numpy.__version__)"<br>
+[numpy]
+python -c "import numpy; print(numpy.__version__)"
 =>1.24.3
 
-[paddlepaddle]<br>
-python -c "import paddle; print('paddle OK:', paddle.__version__)"<br>
+[paddlepaddle]
+##### CPU WIN10
+python -c "import paddle; print('paddle OK:', paddle.__version__)"
 =>3.0.0-rc1
 
-[paddleocr]<br>
-pip show paddleocr | findstr Version<br>
+##### GPU Linux
+python -c "import paddle; print('paddle OK:', paddle.__version__)"
+=>2.6.1
+
+[paddleocr]
+##### CPU WIN10
+pip show paddleocr | findstr Version
 =>2.10.0
 
-[opencv]<br>
-python -c "import cv2; print('OpenCV 版本:', cv2.__version__)"<br>
+##### GPU Linux
+pip show paddleocr | grep Version
+=>2.10.0
+
+[opencv]
+python -c "import cv2; print('OpenCV 版本:', cv2.__version__)"
+##### CPU WIN10
 => 4.10.0
+
+##### GPU Linux
+=>4.11.0
+
+
+
+
+## 使用(已整合到 .vscode\launch.json)
+
+### 訓練 tools\train.py
+> python3 tools/train.py -c configs/rec/PP-OCRv3/en_PP-OCRv3_rec.yml -o Global.pretrained_model=./pretrain_models/en_PP-OCRv3_rec_train/best_accuracy
+
+
+
+

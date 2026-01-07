@@ -28,7 +28,7 @@ log/
 *.vs
 *.user
 *~
-*.vscode
+#*.vscode
 *.idea
 
 # Log files
