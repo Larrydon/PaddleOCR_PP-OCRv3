@@ -1,23 +1,28 @@
 {
-  // 使用 IntelliSense 以得知可用的屬性。
-  // 暫留以檢視現有屬性的描述。
-  // 如需詳細資訊，請瀏覽: https://go.microsoft.com/fwlink/?linkid=830387
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Python 偵錯工具: 目前檔案",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${file}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "Python 偵錯工具: train.py",
-      "type": "python",
-      "request": "launch",
-      "program": "F:\\UserData\\Larry\\Documents\\VSCode Project\\Python\\PaddleOCR-2.10.0\\tools\\train.py",
-      "console": "integratedTerminal",
-      "args": ["-c", "configs\\rec\\PP-OCRv3\\rec_carplate_train_cpu.yml"]
-    }
-  ]
-}
+	// 使用 IntelliSense 以得知可用的屬性。
+	// 暫留以檢視現有屬性的描述。
+	// 如需詳細資訊，請瀏覽: https://go.microsoft.com/fwlink/?linkid=830387
+	"version": "0.2.0",
+	"configurations": [
+	  {
+		"name": "Python 偵錯工具: 目前檔案",
+		"type": "debugpy",
+		"request": "launch",
+		"program": "${file}",
+		"console": "integratedTerminal"
+	  },
+	  {
+		"name": "Python 偵錯工具: train.py",
+		"type": "python",
+		"request": "launch",
+		"program": "${workspaceFolder}/tools/train.py",
+		"console": "integratedTerminal",
+		//CPU
+		"args": ["-c", "configs/rec/PP-OCRv3/rec_carplate_train_cpu.yml"],
+		//GPU
+		//"args": ["-c", "configs/rec/PP-OCRv3/rec_carplate_train_gpu.yml"],
+		"cwd": "${workspaceFolder}"
+	  }
+	]
+  }
+  
