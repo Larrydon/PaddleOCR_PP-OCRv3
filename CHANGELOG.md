@@ -6,6 +6,13 @@
 ==============================================================================
 ## [Unreleased]
 
+
+## [1.1.0] - 2026-01-07
+### Added
+- `src\configs\rec\PP-OCRv3\rec_carplate_train_cpu.yml`
+- `src\configs\rec\PP-OCRv3\rec_carplate_train_gpu.yml`
+
+
 ## [1.0.0] - 2025-12-23
 ### Added
 - `專案結構文件樹->RUN&FILETREE.md`
