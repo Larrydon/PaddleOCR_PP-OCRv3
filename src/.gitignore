@@ -9,7 +9,7 @@ __pycache__/
 
 inference/
 inference_results/
-output/
+# output/
 train_data/
 log/
 *.DS_Store
@@ -19,7 +19,7 @@ log/
 #*.vscode
 *.idea
 
-*.log
+# *.log
 .clang-format
 .clang_format.hook
 

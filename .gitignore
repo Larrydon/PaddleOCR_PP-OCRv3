@@ -21,7 +21,7 @@ __pycache__/
 *.so
 inference/
 inference_results/
-output/
+# output/
 train_data/
 log/
 *.DS_Store
