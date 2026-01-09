@@ -23,7 +23,7 @@ inference/
 inference_results/
 # output/
 train_data/
-log/
+# log/
 *.DS_Store
 *.vs
 *.user
@@ -32,7 +32,7 @@ log/
 *.idea
 
 # Log files
-*.log
+# *.log
 .clang-format
 .clang_format.hook
 
@@ -98,7 +98,7 @@ Thumbs.db
 *.bak
 *.cache
 *.ilk
-*.log
+# *.log
 *.sbr
 *.scc
 *.vssscc
