@@ -140,6 +140,29 @@ python -c "import cv2; print('OpenCV 版本:', cv2.__version__)"<br>
 如果 acc 還是很低，但  norm_edit_dis 很高，代表模型認得出字，但容易混淆相似字（例如 8 和 B、0 和 D）。<br>
 > python3 tools/train.py -c configs/rec/PP-OCRv3/en_PP-OCRv3_rec.yml -o Global.pretrained_model=./pretrain_models/en_PP-OCRv3_rec_train/iter_epoch_1000
 
+### 畫圖(Training Loss Over Global Steps)  draw_log.py
+讀取訓練完成的 train.log 畫出其過程的 Loss 圖，方便觀察曲線圖<br>
+(output\rec_ppocr_v3_distillation\training_loss_plot.png)
+
+> ※ X 軸顯示的是「Step」，而不是「Epoch」(輪次)。
+
+#### 總步數Total Steps(Global Steps)
+所以，如果您的訓練完整跑完了 500 個 Epoch，X 軸理論上會一直延伸到 1000。如果您現在看到的圖表 X 軸尚未停在 1000，<br>
+這代表：訓練尚未結束，可能因為報錯或是您手動停止。<br>
+<br>
+> ※ 假設您的 batch_size(yml設定檔中的 [train] batch_size_per_card=12) 是 12，總數據是 24，所以 1 epoch = 2 steps<br>
+
+在深度學習中，公式如下：$$\text{Total Steps} = \text{Epochs} \times \left( \frac{\text{Total Samples}}{\text{Batch Size}} \right)$$<br>
+<br>
+根據您的設定：<br>
+- Total Samples（總數據量）: 24 筆。
+- Batch Size（批大小）: 2 筆（batch_size_per_card: 12）。<br>
+> 每輪步數: $24 \div 12 = 2$ Steps。<br>
+- 總輪次 (Epochs): 500 次。
+
+計算結果(總步數Total Steps)：
+$500 \times 2 = \mathbf{1000}$ Steps。
+
 <br>
 <br>
 <br>

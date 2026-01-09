@@ -11,6 +11,7 @@
 ### Added
 - `src\configs\rec\PP-OCRv3\rec_carplate_train_cpu.yml`
 - `src\configs\rec\PP-OCRv3\rec_carplate_train_gpu.yml`
+- `src\draw_log.py`
 
 
 ## [1.0.0] - 2025-12-23
