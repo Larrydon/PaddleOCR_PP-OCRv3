@@ -7,11 +7,12 @@
 ## [Unreleased]
 
 
-## [1.1.0] - 2026-01-07
+## [1.1.0] - 2026-01-13
 ### Added
 - `src\configs\rec\PP-OCRv3\rec_carplate_train_cpu.yml`
 - `src\configs\rec\PP-OCRv3\rec_carplate_train_gpu.yml`
 - `src\draw_log.py`
+- `tools\train.py 訓練完成後，會得到動態圖模型 best_accuracy.pdparams`
 
 
 ## [1.0.0] - 2025-12-23

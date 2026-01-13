@@ -113,8 +113,25 @@ python -c "import cv2; print('OpenCV 版本:', cv2.__version__)"<br>
 驗證集 (Eval Set)給模型「模擬考」用的。模型不看答案，考考看學得如何。val_list.txt <br>
 測試集 (Test Set)「真實戰場」。完全沒在清單內，直接拿一張新照片來辨識。非清單內的獨立圖片 <br>
 
+### 模型分為 訓練(train)/推論(infer)
+.pdparams：通常是訓練權重 (Student/Teacher Model) 的格式。(網絡結構)	预训练模型	動態圖模型<br>
+.pdiparams：通常是推論模型 (Inference Model) 的權重格式。(權重參數)	訓練完成的模型	靜態圖模型<br>
+
+Global.pretrained_model (預訓練/評估)： 它只載入權重（.pdparams）。當你進行「評估（Eval）」或「推理（Infer）」和導出 (Export)時，我們不需要優化器的資訊，只需要模型變換出的那些參數。<br>
+<br>
+<br>
+
 ### 訓練 tools\train.py
-> python3 tools/train.py -c configs/rec/PP-OCRv3/en_PP-OCRv3_rec.yml -o Global.pretrained_model=./pretrain_models/en_PP-OCRv3_rec_train/best_accuracy
+> python3 tools/train.py -c configs/rec/PP-OCRv3/en_PP-OCRv3_rec.yml
+
+是重頭訓練，還是續接(微調)取決於 .yml 的設定為何<br>
+#### 重頭訓練
+pretrained_model: ./pretrained/best_accuracy # 预训练模型位置，訓練權重，免加副檔名 [.pdparams]<br>
+checkpoints:  # 重頭訓練，維持空值<br>
+
+#### 續接(微調)
+pretrained_model: # 續接時這裡可以留空<br>
+checkpoints: ./output/rec_ppocr_v3_distillation/latest # 检测点文件位置，可通过设置此选项恢复训练<br>
 
 訓練次數達到 .yml 設定檔中的 eval_batch_step 範圍次數就會去自動執行 eval.py<br>
 讓最好的權重自動更新成 best_accuracy.pdparams
@@ -138,7 +155,7 @@ python -c "import cv2; print('OpenCV 版本:', cv2.__version__)"<br>
 驗證模型的「真實實力」<br>
 如果 acc > 0.9 即可導出模型使用了<br>
 如果 acc 還是很低，但  norm_edit_dis 很高，代表模型認得出字，但容易混淆相似字（例如 8 和 B、0 和 D）。<br>
-> python3 tools/train.py -c configs/rec/PP-OCRv3/en_PP-OCRv3_rec.yml -o Global.pretrained_model=./pretrain_models/en_PP-OCRv3_rec_train/iter_epoch_1000
+> python3 tools\eval.py -c configs/rec/PP-OCRv3/en_PP-OCRv3_rec.yml -o Global.pretrained_model=./pretrain_models/en_PP-OCRv3_rec_train/iter_epoch_1000
 
 ### 畫圖(Training Loss Over Global Steps)  draw_log.py
 讀取訓練完成的 train.log 畫出其過程的 Loss 圖，方便觀察曲線圖<br>

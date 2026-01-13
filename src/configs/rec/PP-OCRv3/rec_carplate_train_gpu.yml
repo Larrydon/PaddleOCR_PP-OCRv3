@@ -16,7 +16,7 @@ Global:
   
   # ch_PP-OCRv3_rec_slim_train 預訓練模型
   pretrained_model: ./pretrained/best_accuracy # 预训练模型位置，訓練權重，免加副檔名 [.pdparams]
-  checkpoints:
+  checkpoints:  # 重頭訓練，維持空值
     
   #pretrained_model: # 續接時這裡可以留空
   #checkpoints: ./output/rec_ppocr_v3_distillation/latest # 检测点文件位置，可通过设置此选项恢复训练
