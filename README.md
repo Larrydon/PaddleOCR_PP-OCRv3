@@ -152,8 +152,15 @@ python -c "import cv2; print('OpenCV 版本:', cv2.__version__)"<br>
 <br>
 > ※ 假設您的 batch_size(yml設定檔中的 [train] batch_size_per_card=12) 是 12，總數據是 24，所以 1 epoch = 2 steps<br>
 
-在深度學習中，公式如下：$$\text{Total Steps} = \text{Epochs} \times \left( \frac{\text{Total Samples}}{\text{Batch Size}} \right)$$<br>
+在深度學習中，公式如下：<br>
+Total Steps = Epochs × (Total Samples / Batch Size)<br>
+![Total Steps Formula](docs\total_steps.svg)
+
+LaTeX公式:<br>
+$$\text{Total Steps} = \text{Epochs} \times \left( \frac{\text{Total Samples}}{\text{Batch Size}} \right)$$
 <br>
+<br>
+
 根據您的設定：<br>
 - Total Samples（總數據量）: 24 筆。
 - Batch Size（批大小）: 2 筆（batch_size_per_card: 12）。<br>
