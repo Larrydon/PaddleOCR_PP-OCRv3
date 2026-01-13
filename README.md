@@ -154,7 +154,7 @@ python -c "import cv2; print('OpenCV 版本:', cv2.__version__)"<br>
 
 在深度學習中，公式如下：<br>
 Total Steps = Epochs × (Total Samples / Batch Size)<br>
-![Total Steps Formula](docs\total_steps.svg)
+![Total Steps Formula](docs/total_steps.svg)
 
 LaTeX公式:<br>
 $$\text{Total Steps} = \text{Epochs} \times \left( \frac{\text{Total Samples}}{\text{Batch Size}} \right)$$
