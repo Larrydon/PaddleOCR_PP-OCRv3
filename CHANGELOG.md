@@ -4,7 +4,9 @@
 
 更新日誌的格式將會基於 [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ==============================================================================
-## [Unreleased]
+## [1.2.0] - 2026-01-16
+### Updated
+- `src/.vscode/launch.json 新增 tools\infer_rec.py、tools\export_model.py、tools\infer\predict_rec.py`
 
 
 ## [1.1.0] - 2026-01-13
