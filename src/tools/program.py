@@ -818,21 +818,26 @@ def preprocess(is_train=False):
     # --- 強制掛載檔案日誌處理器 ---
     if log_file is not None:
         import logging
+
         # 檢查是否已經有 FileHandler，避免重複掛載
-        has_file_handler = any(isinstance(h, logging.FileHandler) for h in logger.handlers)
-        
+        has_file_handler = any(
+            isinstance(h, logging.FileHandler) for h in logger.handlers
+        )
+
         if not has_file_handler:
             # 建立檔案處理器
-            formatter = logging.Formatter('[%(asctime)s] %(name)s %(levelname)s: %(message)s')
+            formatter = logging.Formatter(
+                "[%(asctime)s] %(name)s %(levelname)s: %(message)s"
+            )
             # mode='a' 代表續寫，'w' 代表覆蓋
-            fh = logging.FileHandler(log_file, mode='a', encoding='utf-8')
+            fh = logging.FileHandler(log_file, mode="a", encoding="utf-8")
             fh.setFormatter(formatter)
             fh.setLevel(logging.INFO)
             logger.addHandler(fh)
-            
+
             logger.info(f"系統自動掛載失敗，已手動強制掛載 FileHandler。")
             logger.info(f"日誌檔案路徑: {log_file}")
-    
+
     logger.info(f"當前 logger 處理器數量: {len(logger.handlers)}")
     # ---------------------------
 
@@ -903,7 +908,15 @@ def preprocess(is_train=False):
     elif use_gcu:  # Use Enflame GCU(General Compute Unit)
         device = "gcu:{0}".format(os.getenv("FLAGS_selected_gcus", 0))
     else:
-        device = "gpu:{}".format(dist.ParallelEnv().dev_id) if use_gpu else "cpu"
+        env = dist.ParallelEnv()
+        if use_gpu:
+            device_id = getattr(env, "dev_id", None)
+            if device_id is None:
+                device_id = getattr(env, "device_id", 0)
+            device = f"gpu:{device_id}"
+        else:
+            device = "cpu"
+
     check_device(use_gpu, use_xpu, use_npu, use_mlu, use_gcu)
 
     device = paddle.set_device(device)

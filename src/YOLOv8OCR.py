@@ -137,6 +137,7 @@ for idx, yolo_box in enumerate(yolo_results[0].boxes.xyxy):
     crop_np = np.array(crop_img)
     ocr_res = ocr.ocr(crop_np)
     if not ocr_res or not ocr_res[0]:
+        print(f"❌ 警告: 圖片 {TEST_IMG_PATH} 無法辨識出任何文字，已跳過。")
         continue
     ocr_boxes = [line[0] for line in ocr_res[0]]
 
@@ -174,7 +175,8 @@ for idx, yolo_box in enumerate(yolo_results[0].boxes.xyxy):
 
         final_ocr_res = ocr.ocr(np.array(corrected_img))
 
-    if not final_ocr_res or len(final_ocr_res[0]) == 0:
+    if not final_ocr_res or not final_ocr_res[0]:
+        print("❌ 辨識結果為空")
         continue
 
     texts, scores = [], []
@@ -201,9 +203,12 @@ for idx, yolo_box in enumerate(yolo_results[0].boxes.xyxy):
         fill="yellow",
         font=font,
     )
+    print(
+        f"✅ 辨識結果: {plate_text} | 置信度: {avg_score:.4f} | 座標: [{x1}, {y1}, {x2}, {y2}]"
+    )
+    print(f"✅ 已產生第一次 OCR debug 圖：1.ocr_debug/ocr_raw_*.jpg")
+    print(f"✅ 已產生透視校正 debug 圖：2.ocr_debug/perspective_*.jpg")
 
 # ================== 輸出 ==================
 orig_img.save(OUTPUT_PATH)
 print(f"✅ 已輸出辨識結果：{OUTPUT_PATH}")
-print(f"✅ 已產生第一次 OCR debug 圖：1.ocr_debug/ocr_raw_*.jpg")
-print(f"✅ 已產生透視校正 debug 圖：2.ocr_debug/perspective_*.jpg")

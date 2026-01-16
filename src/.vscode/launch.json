@@ -35,6 +35,47 @@
 		  "-o",
 		  "Global.pretrained_model=./output/rec_ppocr_v3_distillation/best_accuracy"
 		]
+	  },
+	  {
+		"name": "Python 偵錯工具: infer_rec.py",
+		"type": "debugpy",
+		"request": "launch",
+		"program": "${workspaceFolder}/tools/infer_rec.py",
+		"console": "integratedTerminal",
+		"args": [
+		  "-c",
+		  "configs/rec/PP-OCRv3/rec_carplate_train_gpu.yml",
+		  "-o",
+		  "Global.pretrained_model=./output/rec_ppocr_v3_distillation/best_accuracy",
+		  "Global.infer_img=./no_train_images/no_train_img1.jpg"
+		]
+	  },
+	  {
+		"name": "Python 偵錯工具: export_model.py",
+		"type": "debugpy",
+		"request": "launch",
+		"program": "${workspaceFolder}/tools/export_model.py",
+		"console": "integratedTerminal",
+		"args": [
+		  "-c",
+		  "configs/rec/PP-OCRv3/rec_carplate_train_gpu.yml",
+		  "-o",
+		  "Global.pretrained_model=./output/rec_ppocr_v3_distillation/best_accuracy"
+		]
+	  },
+	  {
+		"name": "Python 偵錯工具: predict_rec.py",
+		"type": "debugpy",
+		"request": "launch",
+		"program": "${workspaceFolder}/tools/infer/predict_rec.py",
+		"console": "integratedTerminal",
+		"args": [
+			"--image_dir", "./no_train_images/no_train_img1.jpg",
+			"--rec_model_dir", "./inference/PP-OCRv3_taiwan_car_rec/Student",
+			"--rec_image_shape", "3, 48, 320",
+			"--rec_char_dict_path", "./ppocr/utils/dict/dict_taiwan_car.txt",
+			"--use_gpu", "False"
+		]
 	  }
 	]
   }
