@@ -3,7 +3,7 @@
 Global:
   debug: False
   use_gpu: True
-  epoch_num: 500
+  epoch_num: 1000
   log_smooth_window: 20
   print_batch_step: 20 # 日志打印步数间隔，根据需要自行设置合适的数值
 
@@ -40,9 +40,18 @@ Optimizer:
   beta1: 0.9
   beta2: 0.999
   lr:
-    name: Piecewise
-    decay_epochs : [700]
-    values : [0.0005, 0.00005]
+    
+    # >學習率排程 Cosine / Piecewise 則一使用<---
+    #>----------- Cosine 餘弦衰減-平滑曲線-------
+    name: Cosine
+    learning_rate: 0.0005   # 使用初始學習率 
+    #<------------------------------------------
+    #>----------- Piecewise 分段衰減-階梯式------
+    #name: Piecewise
+    #decay_epochs : [700]
+    #values : [0.0005, 0.00005]
+    #<------------------------------------------
+
     warmup_epoch: 5
   regularizer:
     name: L2
@@ -51,7 +60,7 @@ Optimizer:
 
 Architecture:
   model_type: &model_type "rec"
-  name: DistillationModel
+  name: DistillationModel	# 這裡直接指名使用「蒸餾模型」架構
   algorithm: Distillation
   Models:
     Teacher:
@@ -192,9 +201,9 @@ Train:
         - valid_ratio
   loader:
     shuffle: true
-    batch_size_per_card: 12 #128
+    batch_size_per_card: 24 #128
     drop_last: False # 數據這麼少，絕對不能 drop
-    num_workers: 0 # 數據少，用 0 避免多線程切換開銷
+    num_workers: 4 # 數據少，用 0 避免多線程切換開銷
 
 Eval:
   dataset:
