@@ -110,6 +110,15 @@ python -c "import cv2; print('OpenCV 版本:', cv2.__version__)"<br>
 ## 使用(已整合到 .vscode\launch.json)
 
 ### 3種資料集
+通用数据 用于训练以文本文件存储的数据集(SimpleDataSet);<br>
+图片路径和图片标签用 \t 分割<br>
+.\train_data\train_list.txt<br>
+
+例如:<br>
+圖檔路徑	辨識結果<br>
+images/202512171605560010_crop_0.jpg	使290<br>
+images/202512171605560015_crop_0.jpg	外1743<br>
+
 三種數據集的區別為了讓模型訓練更科學，通常我們會將數據分為以下三類：<br>
 
 [訓練集] 數據類型作用您的現狀訓練集 (Train Set)給模型「讀書」用的。(train_list.txt)<br>
