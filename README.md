@@ -163,27 +163,58 @@ Global.pretrained_model (預訓練/評估)： 它只載入權重（.pdparams）�
 ### 訓練 tools\train.py
 > python tools/train.py -c configs/rec/PP-OCRv3/en_PP-OCRv3_rec.yml
 
-是重頭訓練，還是續接(微調)取決於 .yml 的設定為何<br>
-#### 重頭訓練
+是從頭訓練，還是續接(微調)取決於 .yml 的設定為何<br>
+#### 從頭訓練
 pretrained_model: ./pretrained/best_accuracy # 预训练模型位置，訓練權重，免加副檔名 [.pdparams]<br>
-checkpoints:  # 重頭訓練，維持空值<br>
+checkpoints:  # 從頭訓練，維持空值<br>
 
 #### 續接(微調)
 pretrained_model: # 續接時這裡可以留空<br>
 checkpoints: ./output/rec_ppocr_v3_distillation/latest # 检测点文件位置，可通过设置此选项恢复训练<br>
 
-訓練次數達到 .yml 設定檔中的 eval_batch_step 範圍次數就會去自動執行 eval.py<br>
-讓最好的權重自動更新成 best_accuracy.pdparams
+訓練次數達到 .yml 設定檔中的 [eval_batch_step]<br>
+step 步數 範圍次數到達就會自動執行 eval.py<br>
+讓最好的權重自動更新成 best_accuracy.pdparams<br>
+eval_batch_step: [0, 100]<br>
+=>	表示，每100步(step非epoch) 做一次驗證，若權重有比較好(acc)則自動覆蓋至 best_accuracy.pdparams<br>
+>	train.log 裡不會像 console terminal 看到 eval model:: 1/8跑到8/8的 100%進度<br>
+	要找 ppocr INFO: cur metric, acc: 0.0<br>
+	[cur metric]就是執行 eval.py跑出的數據了
 
-最後跑完 500迴圈的結果(根據 rec_carplate_train_gpu.yml 的設定 epoch_num: 500)
+	[2026-01-20 13:54:59,000] ppocr INFO: epoch: [3/1000], global_step: 100, lr: 0.000183, acc: 0.000000, norm_edit_dis: 0.147199, Teacher_acc: 0.000000, Teacher_norm_edit_dis: 0.123568, dml_ctc_0: 8.531968, loss: 207.662094, dml_sar_0: 0.554854, loss_distance_l2_Student_Teacher_0: 0.207932, loss_ctc_Student_0: 99.540894, loss_ctc_Teacher_1: 93.225414, loss_sar_Student_0: 2.853486, loss_sar_Teacher_1: 2.841075, avg_reader_cost: 0.20157 s, avg_batch_cost: 0.23887 s, avg_samples: 2.4, ips: 10.04719 samples/s, eta: 5:56:04, max_mem_reserved: 4066 MB, max_mem_allocated: 3840 MB
+	[2026-01-20 13:54:59,236] ppocr INFO: cur metric, acc: 0.0, norm_edit_dis: 0.13809552539672953, Teacher_acc: 0.0, Teacher_norm_edit_dis: 0.07045124780052203, fps: 139.63977281050452
+	[2026-01-20 13:55:06,357] ppocr INFO: save best model is to ./output/rec_ppocr_v3_distillation/best_accuracy
+	[2026-01-20 13:55:06,358] ppocr INFO: best metric, acc: 0.0, is_float16: False, norm_edit_dis: 0.13809552539672953, Teacher_acc: 0.0, Teacher_norm_edit_dis: 0.07045124780052203, fps: 139.63977281050452, best_epoch: 3
+
+訓練輪次(epoch)達到 .yml 設定檔中的 [save_epoch_step]<br>
+save_epoch_step: 100<br>
+=>	表示，每100 輪次(epoch非step) 將權重另存成 iter_epoch_輪次.pdparams<br>
+>
+	[2026-01-20 14:35:03,087] ppocr INFO: epoch: [100/1000], global_step: 4860, lr: 0.000489, acc: 0.000000, norm_edit_dis: 0.234356, Teacher_acc: 0.000000, Teacher_norm_edit_dis: 0.229380, dml_ctc_0: 0.591088, loss: 48.808977, dml_sar_0: 1.113028, loss_distance_l2_Student_Teacher_0: 0.000763, loss_ctc_Student_0: 22.353327, loss_ctc_Teacher_1: 22.179845, loss_sar_Student_0: 1.349556, loss_sar_Teacher_1: 1.333206, avg_reader_cost: 0.18777 s, avg_batch_cost: 0.34255 s, avg_samples: 10.8, ips: 31.52854 samples/s, eta: 5:14:15, max_mem_reserved: 4130 MB, max_mem_allocated: 3840 MB
+	[2026-01-20 14:35:09,862] ppocr INFO: epoch: [100/1000], global_step: 4880, lr: 0.000489, acc: 0.000000, norm_edit_dis: 0.227793, Teacher_acc: 0.000000, Teacher_norm_edit_dis: 0.224777, dml_ctc_0: 0.554306, loss: 49.521770, dml_sar_0: 1.146020, loss_distance_l2_Student_Teacher_0: 0.000732, loss_ctc_Student_0: 22.423958, loss_ctc_Teacher_1: 22.321790, loss_sar_Student_0: 1.317490, loss_sar_Teacher_1: 1.347765, avg_reader_cost: 0.00185 s, avg_batch_cost: 0.33794 s, avg_samples: 24.0, ips: 71.01832 samples/s, eta: 5:13:50, max_mem_reserved: 4130 MB, max_mem_allocated: 3840 MB
+	[2026-01-20 14:35:16,520] ppocr INFO: epoch: [100/1000], global_step: 4900, lr: 0.000489, acc: 0.000000, norm_edit_dis: 0.238523, Teacher_acc: 0.000000, Teacher_norm_edit_dis: 0.229688, dml_ctc_0: 0.954557, loss: 49.478306, dml_sar_0: 1.163579, loss_distance_l2_Student_Teacher_0: 0.000706, loss_ctc_Student_0: 22.391512, loss_ctc_Teacher_1: 22.548619, loss_sar_Student_0: 1.353255, loss_sar_Teacher_1: 1.341642, avg_reader_cost: 0.00190 s, avg_batch_cost: 0.33217 s, avg_samples: 23.5, ips: 70.74698 samples/s, eta: 5:13:24, max_mem_reserved: 4130 MB, max_mem_allocated: 3840 MB
+	[2026-01-20 14:35:16,723] ppocr INFO: cur metric, acc: 0.0, norm_edit_dis: 0.20654788353165765, Teacher_acc: 0.0, Teacher_norm_edit_dis: 0.21261931007927748, fps: 165.4505577733247
+	[2026-01-20 14:35:22,530] ppocr INFO: save best model is to ./output/rec_ppocr_v3_distillation/best_accuracy
+	[2026-01-20 14:35:22,530] ppocr INFO: best metric, acc: 0.0, is_float16: False, norm_edit_dis: 0.20654788353165765, Teacher_acc: 0.0, Teacher_norm_edit_dis: 0.21261931007927748, fps: 165.4505577733247, best_epoch: 100
+	[2026-01-20 14:35:25,506] ppocr INFO: save model in ./output/rec_ppocr_v3_distillation/latest
+	[2026-01-20 14:35:28,300] ppocr INFO: save model in ./output/rec_ppocr_v3_distillation/iter_epoch_100
+
+最後跑完 500輪次(迴圈)的結果(根據 rec_carplate_train_gpu.yml 的設定 epoch_num: 500)
 > 
 	[2026-01-07 16:01:41,507] ppocr INFO: best metric, acc: 0.12499984375019532, is_float16: False, norm_edit_dis: 0.4220245319931446, Teacher_acc: 0.24999968750039064, Teacher_norm_edit_dis: 0.44702450074318356, fps: 115.20755908972299, best_epoch: 500<br>
 	[2026-01-07 16:01:44,721] ppocr INFO: save model in ./output/rec_ppocr_v3_distillation/latest<br>
 	[2026-01-07 16:01:48,068] ppocr INFO: save model in ./output/rec_ppocr_v3_distillation/iter_epoch_500<br>
 	[2026-01-07 16:01:48,068] ppocr INFO: best metric, acc: 0.12499984375019532, is_float16: False, norm_edit_dis: 0.4220245319931446, Teacher_acc: 0.24999968750039064, Teacher_norm_edit_dis: 0.44702450074318356, fps: 115.20755908972299, best_epoch: 500<br>
 
+rec_carplate_train_gpu.yml 所使用的模型<br>
+> 	您使用的是 DistillationModel (Student/Teacher 結構)<br>
+> 
+	Architecture:
+  	name: DistillationModel	# 這裡直接指名使用「蒸餾模型」架構
+  	algorithm: Distillation
+
 數據解讀：模型現在的實力(訓練結果跑驗證)<br>
-- acc: 0.1249 (12.5%) 這代表在你的 8 筆驗證資料中，只認對了 1 張。剩下的 7 張全都認錯了（OCR 的 Acc 要求是文字內容 100% 完全正確才算對）。<br>
+- acc: 0.1249 (12.5%) 準確率；這代表在你的 8 筆驗證資料中，只認對了 1 張。剩下的 7 張全都認錯了（OCR 的 Acc 要求是文字內容 100% 完全正確才算對）。<br>
 - norm_edit_dis: 0.422 這是「正規化編輯距離」。數值越接近 1 越好。0.42 代表平均來說，一張車牌如果你有 7 個字，它可能只認對了 2~3 個字，或者順序完全亂掉。<br>
 - Teacher_acc: 0.249 (25%) 老師模型（Teacher）認對了 2 張。這說明即便是結構更複雜的老師模型，目前的表現也很差。<br>
 
@@ -196,6 +227,9 @@ checkpoints: ./output/rec_ppocr_v3_distillation/latest # 检测点文件位置�
 如果 acc 還是很低，但  norm_edit_dis 很高，代表模型認得出字，但容易混淆相似字（例如 8 和 B、0 和 D）。<br>
 > python tools\eval.py -c configs/rec/PP-OCRv3/en_PP-OCRv3_rec.yml -o Global.pretrained_model=./pretrain_models/en_PP-OCRv3_rec_train/iter_epoch_1000
 <br>
+
+>	訓練時的 .yml 設定
+	[2026-01-20 13:54:59,236] ppocr INFO: cur metric, acc: 0.0, norm_edit_dis: 0.13809552539672953, Teacher_acc: 0.0, Teacher_norm_edit_dis: 0.07045124780052203, fps: 139.63977281050452
 
 ### 畫圖(Training Loss Over Global Steps)  draw_log.py
 讀取訓練完成的 train.log 畫出其過程的 Loss 圖，方便觀察曲線圖<br>
