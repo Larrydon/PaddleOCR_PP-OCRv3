@@ -154,7 +154,9 @@ images/202512171605560015_crop_0.jpg	外1743<br>
 .pdparams：通常是訓練權重 (Student/Teacher Model) 的格式。(網絡結構)	预训练模型	動態圖模型<br>
 .pdiparams：通常是推論模型 (Inference Model) 的權重格式。(權重參數)	訓練完成的模型	靜態圖模型<br>
 
-Global.pretrained_model (預訓練/評估)： 它只載入權重（.pdparams）。當你進行「評估（Eval）」或「推理（Infer）」和導出 (Export)時，我們不需要優化器的資訊，只需要模型變換出的那些參數。<br>
+Global.pretrained_model (預訓練/評估)： 它只載入權重（.pdparams）。<br>
+當你進行「評估（Eval）」或「推理（Infer）」和導出 (Export)時，<br>
+我們不需要優化器的資訊(best_accuracy.states 優化器狀態)，只需要模型變換出的那些參數(best_accuracy.pdparams 權重/參數)。<br>
 <br>
 <br>
 
