@@ -60,7 +60,7 @@ Optimizer:
 
 Architecture:
   model_type: &model_type "rec"
-  name: DistillationModel	# 這裡直接指名使用「蒸餾模型」架構
+  name: DistillationModel    # 這裡直接指名使用「蒸餾模型」架構
   algorithm: Distillation
   Models:
     Teacher:
