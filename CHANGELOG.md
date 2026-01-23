@@ -7,6 +7,7 @@
 ## [1.3.0] - 2026-01-20
 ### Added
 - `新增 src\AutoSplitTrainVal_List.py 用來自動按照8:2分成 .\train_data\train_list.txt 和 .\train_data\val_list.txt`
+- `新增 src\configs\rec\PP-OCRv3\rec_carplate_train_gpu_2.yml 新增第二輪增強訓練設定檔`
 
 ### Updated
 - `更新 src\configs\rec\PP-OCRv3\rec_carplate_train_gpu.yml 開始真實的訓練(5千張以內都還算是小型模型)耗時5個半小時(116筆真實照片+1050筆合成照片=總共1166筆)`

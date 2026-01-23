@@ -1,0 +1,234 @@
+# 參考來自[ch_PP-OCRv3_rec_distillation.yml]
+
+Global:
+  debug: False
+  use_gpu: True
+  epoch_num: 500
+  log_smooth_window: 20
+  print_batch_step: 20 # 日志打印步数间隔，根据需要自行设置合适的数值
+
+  save_model_dir: ./output/rec_ppocr_v3_distillation_2/  # 训练模型保存目录
+  save_epoch_step: 100  # 检查点保存轮次间隔，根据需要自行设置合适的数值
+  
+  eval_batch_step: [0, 100] # 預設值 [0, 2000]，表示0~2000 內
+  cal_metric_during_train: True
+  
+  
+  # ch_PP-OCRv3_rec_slim_train 預訓練模型
+  pretrained_model: ./pretrained/best_accuracy # 预训练模型位置，訓練權重，免加副檔名 [.pdparams]
+  checkpoints:  # 從頭訓練，維持空值
+    
+  #pretrained_model: # 續接時這裡可以留空
+  #checkpoints: ./output/rec_ppocr_v3_distillation/latest # 检测点文件位置，可通过设置此选项恢复训练
+
+  
+  # tools/export_model.py 將訓練完的模型導出成推理模型
+  save_inference_dir: ./inference/PP-OCRv3_taiwan_car_rec/ #定義推理模型 (Inference Model) 的儲存位置。 
+  use_visualdl: False # PaddleOCR 3.x 已移除，留著只會誤導
+  infer_img: doc/imgs_words/ch/word_1.jpg
+  character_dict_path: ./ppocr/utils/dict/dict_taiwan_car.txt  
+
+  max_text_length: &max_text_length 16 #128 # 能够识别的最长文本长度，根据需要自行设置合适的数值
+  use_space_char: False # 是否识别空格字符
+  infer_mode: False
+  distributed: False # True 如果你的電腦只有一張顯卡，請確保：False 分散式模式在小數據上會浪費很多時間在進程間通訊
+  save_res_path: ./output/rec/predicts_ppocrv3_distillation.txt  # 使用 tools/infer_rec.py（預測腳本）將預測結果存下來的路徑
+  d2s_train_image_shape: [3, 48, -1]
+
+Optimizer:
+  name: Adam
+  beta1: 0.9
+  beta2: 0.999
+  lr:
+    
+    # >學習率排程 Cosine / Piecewise 則一使用<---
+    #>----------- Cosine 餘弦衰減-平滑曲線-------
+    name: Cosine
+    learning_rate: 0.0001   # 使用初始學習率 0.0005
+    #<------------------------------------------
+    #>----------- Piecewise 分段衰減-階梯式------
+    #name: Piecewise
+    #decay_epochs : [700]
+    #values : [0.0005, 0.00005]
+    #<------------------------------------------
+
+    warmup_epoch: 2 # 5
+  regularizer:
+    name: L2
+    factor: 3.0e-05
+
+
+Architecture:
+  model_type: &model_type "rec"
+  name: DistillationModel    # 這裡直接指名使用「蒸餾模型」架構
+  algorithm: Distillation
+  Models:
+    Teacher:
+      pretrained:
+      freeze_params: false
+      return_all_feats: true
+      model_type: *model_type
+      algorithm: SVTR_LCNet
+      Transform:
+      Backbone:
+        name: MobileNetV1Enhance
+        scale: 0.5
+        last_conv_stride: [1, 2]
+        last_pool_type: avg
+        last_pool_kernel_size: [2, 2]
+      Head:
+        name: MultiHead
+        head_list:
+          - CTCHead:
+              Neck:
+                name: svtr
+                dims: 64
+                depth: 2
+                hidden_dims: 120
+                use_guide: True
+              Head:
+                fc_decay: 0.00001
+          - SARHead:
+              enc_dim: 512
+              max_text_length: *max_text_length
+    Student:
+      pretrained:
+      freeze_params: false
+      return_all_feats: true
+      model_type: *model_type
+      algorithm: SVTR_LCNet
+      Transform:
+      Backbone:
+        name: MobileNetV1Enhance
+        scale: 0.5
+        last_conv_stride: [1, 2]
+        last_pool_type: avg
+        last_pool_kernel_size: [2, 2]
+      Head:
+        name: MultiHead
+        head_list:
+          - CTCHead:
+              Neck:
+                name: svtr
+                dims: 64
+                depth: 2
+                hidden_dims: 120
+                use_guide: True
+              Head:
+                fc_decay: 0.00001
+          - SARHead:
+              enc_dim: 512
+              max_text_length: *max_text_length
+Loss:
+  name: CombinedLoss
+  loss_config_list:
+  - DistillationDMLLoss:
+      weight: 1.0
+      act: "softmax"
+      use_log: true
+      model_name_pairs:
+      - ["Student", "Teacher"]
+      key: head_out
+      multi_head: True
+      dis_head: ctc
+      name: dml_ctc
+  - DistillationDMLLoss:
+      weight: 0.5
+      act: "softmax"
+      use_log: true
+      model_name_pairs:
+      - ["Student", "Teacher"]
+      key: head_out
+      multi_head: True
+      dis_head: sar
+      name: dml_sar
+  - DistillationDistanceLoss:
+      weight: 1.0
+      mode: "l2"
+      model_name_pairs:
+      - ["Student", "Teacher"]
+      key: backbone_out
+  - DistillationCTCLoss:
+      weight: 1.0
+      model_name_list: ["Student", "Teacher"]
+      key: head_out
+      multi_head: True
+  - DistillationSARLoss:
+      weight: 1.0
+      model_name_list: ["Student", "Teacher"]
+      key: head_out
+      multi_head: True
+
+PostProcess:
+  name: DistillationCTCLabelDecode
+  model_name: ["Student", "Teacher"]
+  key: head_out
+  multi_head: True
+
+Metric:
+  name: DistillationMetric
+  base_metric_name: RecMetric
+  main_indicator: acc
+  key: "Student"
+  ignore_space: False
+
+Train:
+  dataset:
+    name: SimpleDataSet
+    data_dir: ./train_data/
+    ext_op_transform_idx: 1
+    label_file_list:
+    - ./train_data/train_list.txt
+    transforms:
+    - DecodeImage:
+        img_mode: BGR
+        channel_first: false
+    - RecAug:  # 這是資料增強設定的核心！ 
+        use_tia: True       # 開啟 TIA 幾何變換（模擬車牌歪斜、變形）
+        aug_prob: 0.8       # 每一張圖有 80% 機率會被「變裝」，提高觸發增強的機率
+    - RecConAug:            # 隨機拼接增強，增加模型處理長短車牌的能力
+        prob: 0.5
+        ext_data_num: 2
+        image_shape: [48, 320, 3]
+        max_text_length: *max_text_length
+    - MultiLabelEncode:
+    - RecResizeImg:
+        image_shape: [3, 48, 320]
+    - KeepKeys:
+        keep_keys:
+        - image
+        - label_ctc
+        - label_sar
+        - length
+        - valid_ratio
+  loader:
+    shuffle: true
+    batch_size_per_card: 24 #128
+    drop_last: False # 數據這麼少，絕對不能 drop
+    num_workers: 4 # 數據少，用 0 避免多線程切換開銷
+
+Eval:
+  dataset:
+    name: SimpleDataSet
+    data_dir: ./train_data
+    label_file_list:
+    - ./train_data/val_list.txt
+    transforms:
+    - DecodeImage:
+        img_mode: BGR
+        channel_first: false
+    - MultiLabelEncode:
+    - RecResizeImg:
+        image_shape: [3, 48, 320]
+    - KeepKeys:
+        keep_keys:
+        - image
+        - label_ctc
+        - label_sar
+        - length
+        - valid_ratio
+  loader:
+    shuffle: false
+    drop_last: false
+    batch_size_per_card: 4  #128
+    num_workers: 0
