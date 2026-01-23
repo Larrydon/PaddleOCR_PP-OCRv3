@@ -25,11 +25,12 @@ os.makedirs(DEBUG_DIR, exist_ok=True)
 yolo_model = YOLO("detectoryolov8s.pt")  # 車牌模型 detectoryolov8s.pt
 
 ocr = PaddleOCR(
-    lang="ch",
+    # lang="ch", # 可以拿掉，因為您已經指定了自定義模型和字典
     det=False,
     use_angle_cls=False,
     rec_model_dir=REC_MODEL_PATH,
     use_gpu=False,
+    rec_char_dict_path="./ppocr/utils/dict/dict_taiwan_car.txt",  # 必須指定字典
 )  # 明確指定 ch_PP-OCRv3_rec_infer ch_PP-OCRv3_rec_slim2_infer
 
 
@@ -111,6 +112,59 @@ def intersection_ratio(ocr_box, yolo_rect):
     return inter_area / area_ocr if area_ocr > 0 else 0.0
 
 
+def draw_yolo_only(draw, x1, y1, x2, y2, font):
+    draw.rectangle([x1, y1, x2, y2], outline="blue", width=3)
+    draw.text((x1, max(0, y1 - 25)), "YOLO only", fill="yellow", font=font)
+
+
+def imread_equivalent(img_np):
+    """
+    將任意來源的 numpy image，強制轉成 PaddleOCR
+    等價於 cv2.imread() 的輸入格式
+    """
+    # 1️⃣ 確保 numpy
+    if not isinstance(img_np, np.ndarray):
+        raise TypeError("input must be numpy array")
+
+    # 2️⃣ dtype 強制 uint8
+    if img_np.dtype != np.uint8:
+        img_np = img_np.astype(np.uint8)
+
+    # 3️⃣ channel 修正
+    if img_np.ndim == 2:
+        # gray → BGR
+        img_np = cv2.cvtColor(img_np, cv2.COLOR_GRAY2BGR)
+    elif img_np.ndim == 3 and img_np.shape[2] == 3:
+        pass
+    else:
+        raise ValueError(f"unsupported image shape: {img_np.shape}")
+
+    # 4️⃣ 記憶體連續（⚠️ 非常關鍵）
+    img_np = np.ascontiguousarray(img_np)
+
+    # 5️⃣ 尺寸保護（rec 最低容忍）
+    h, w = img_np.shape[:2]
+    if h < 16 or w < 16:
+        return None
+
+    return img_np
+
+
+def parse_rec_result(ocr_res):
+    """
+    適用於 det=False 的 PaddleOCR 輸出
+    """
+    if not ocr_res or not ocr_res[0]:
+        return "", 0.0
+
+    texts, scores = [], []
+    for text, score in ocr_res[0]:
+        texts.append(text)
+        scores.append(score)
+
+    return " ".join(texts), float(np.mean(scores))
+
+
 # ================== 主流程 ==================
 orig_img = Image.open(TEST_IMG_PATH).convert("RGB")
 draw = ImageDraw.Draw(orig_img)
@@ -122,6 +176,11 @@ except:
     font_default = ImageFont.load_default()
 
 yolo_results = yolo_model.predict(TEST_IMG_PATH)
+
+try:
+    font = ImageFont.truetype(FONT_TEXT, 20)
+except:
+    font = font_default
 
 for idx, yolo_box in enumerate(yolo_results[0].boxes.xyxy):
     # 1️⃣ 原始 YOLO 框
@@ -136,9 +195,15 @@ for idx, yolo_box in enumerate(yolo_results[0].boxes.xyxy):
     crop_img = orig_img.crop((x1e, y1e, x2e, y2e))
     crop_np = np.array(crop_img)
     ocr_res = ocr.ocr(crop_np)
+
+    # ===== 判斷 OCR 是否有結果 =====
     if not ocr_res or not ocr_res[0]:
-        print(f"❌ 警告: 圖片 {TEST_IMG_PATH} 無法辨識出任何文字，已跳過。")
+        # YOLO 偵測到，但 OCR 無結果 → 畫藍框
+        draw_yolo_only(draw, x1, y1, x2, y2, font)
+        print(f"❌ YOLO 偵測到，但 OCR 無結果: [{x1},{y1},{x2},{y2}]")
+        # 跳到下一個 YOLO 框
         continue
+
     ocr_boxes = [line[0] for line in ocr_res[0]]
 
     # 將 OCR box 映射回原圖座標
@@ -148,9 +213,9 @@ for idx, yolo_box in enumerate(yolo_results[0].boxes.xyxy):
         ocr_boxes_global.append(global_b)
 
     # ---------- 保存第一次 OCR debug 圖 ----------
-    crop_img.save(f"{DEBUG_DIR}/1.ocr_raw_{idx+1}.jpg")
+    crop_img.save(os.path.join(DEBUG_DIR, f"1.ocr_raw_{idx+1}.jpg"))
 
-    # 4️⃣ 計算原始圖 OCR boxes 與 expand_box 的交集比例
+    # 4️⃣ 計算交集比例
     ratios = []
     for ocr_box in ocr_boxes_global:
         r = intersection_ratio(ocr_box, (x1e, y1e, x2e, y2e))
@@ -159,53 +224,81 @@ for idx, yolo_box in enumerate(yolo_results[0].boxes.xyxy):
 
     # 5️⃣ 判斷是否做透視校正
     if mean_ratio < 0.3:
-        # OCR 幾乎不在 expand_box 中，可能偵測失敗
+        # OCR 幾乎不在 expand_box 中 → 畫藍框
+        draw_yolo_only(draw, x1, y1, x2, y2, font)
+
+        print(f"❌ OCR 與 YOLO 框重疊率太低: [{x1},{y1},{x2},{y2}]")
         continue
     elif mean_ratio < 0.6:
-        # OCR 部分在 expand_box 中，可選擇再稍微 expand 或直接透視校正
-        # 例如可以再 expand 小比例再 warp
         final_ocr_res = ocr_res
     else:
         # ---------- 透視校正 ----------
-        # mean_ratio >= 0.6，可信，做透視校正
-        # perspective warp
         corrected = perspective_correction(crop_img, ocr_boxes)
-        corrected_img = Image.fromarray(corrected)
-        corrected_img.save(f"{DEBUG_DIR}/2.perspective_{idx+1}.jpg")
+        # corrected_img = Image.fromarray(corrected)
+        # corrected_img.save(f"{DEBUG_DIR}/2.perspective_{idx+1}.jpg")
+        # final_ocr_res = ocr.ocr(np.array(corrected_img))
+        #
+        # result = ocr.ocr(f"{DEBUG_DIR}/2.perspective_{idx+1}.jpg", det=False, cls=False)
+        # for idx in range(len(result)):
+        #     res = result[idx]
+        #     for line in res:
+        #         print(line)
 
-        final_ocr_res = ocr.ocr(np.array(corrected_img))
+        # === cv2.imread 等價處理 ===
+        corrected_np = imread_equivalent(corrected)
+
+        if corrected_np is None:
+            draw_yolo_only(draw, x1, y1, x2, y2, font)
+            print("❌ 透視校正後影像過小，略過")
+            continue
+
+        cv2.imwrite(f"{DEBUG_DIR}/2.perspective_{idx+1}.jpg", corrected_np)
+        final_ocr_res = ocr.ocr(corrected_np, det=False, cls=False)
 
     if not final_ocr_res or not final_ocr_res[0]:
-        print("❌ 辨識結果為空")
+        # OCR 無結果 → 畫藍框
+        draw_yolo_only(draw, x1, y1, x2, y2, font)
+
+        print(f"❌ OCR 辨識結果為空: [{x1},{y1},{x2},{y2}]")
         continue
 
-    texts, scores = [], []
-    for _, (text, score) in final_ocr_res[0]:
-        texts.append(text)
-        scores.append(score)
+    """
+    只在 ocr.ocr(det=True) 時成立
+    每一筆回傳是：
+    [box, (text, score)]
+    """
+    # texts, scores = [], []
+    # for _, (text, score) in final_ocr_res[0]:
+    #     texts.append(text)
+    #     scores.append(score)
 
-    avg_score = np.mean(scores) if scores else 0
-    if avg_score < OCR_SCORE_THRESH:
-        continue
-
-    plate_text = " ".join(texts)
+    # avg_score = np.mean(scores) if scores else 0
+    # plate_text = " ".join(texts)
+    plate_text, avg_score = parse_rec_result(final_ocr_res)
 
     # ---------- 畫回原圖 ----------
-    draw.rectangle([x1, y1, x2, y2], outline="red", width=3)
-    font_size = max(12, int((y2 - y1) * 0.5))
-    try:
-        font = ImageFont.truetype(FONT_TEXT, font_size)
-    except:
-        font = font_default
-    draw.text(
-        (x1, max(0, y1 - font_size - 5)),
-        f"{plate_text} ({avg_score:.2f})",
-        fill="yellow",
-        font=font,
-    )
+    # ===== 根據 OCR 信心畫框顏色 =====
+    if avg_score < OCR_SCORE_THRESH:
+        draw.rectangle([x1, y1, x2, y2], outline="orange", width=3)
+        draw.text(
+            (x1, max(0, y1 - 25)),
+            f"OCR low ({avg_score:.2f})",
+            fill="yellow",
+            font=font,
+        )
+    else:
+        draw.rectangle([x1, y1, x2, y2], outline="red", width=3)
+        draw.text(
+            (x1, max(0, y1 - 25)),
+            f"{plate_text} ({avg_score:.2f})",
+            fill="yellow",
+            font=font,
+        )
+
     print(
-        f"✅ 辨識結果: {plate_text} | 置信度: {avg_score:.4f} | 座標: [{x1}, {y1}, {x2}, {y2}]"
+        f"✅ 辨識結果: {plate_text} | 置信度: {avg_score:.4f} | 座標: [{x1},{y1},{x2},{y2}]"
     )
+
     print(f"✅ 已產生第一次 OCR debug 圖：1.ocr_debug/ocr_raw_*.jpg")
     print(f"✅ 已產生透視校正 debug 圖：2.ocr_debug/perspective_*.jpg")
 

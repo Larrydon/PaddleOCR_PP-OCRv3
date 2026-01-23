@@ -4,6 +4,18 @@
 
 更新日誌的格式將會基於 [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ==============================================================================
+## [1.3.0] - 2026-01-20
+### Added
+- `新增 src\AutoSplitTrainVal_List.py 用來自動按照8:2分成 .\train_data\train_list.txt 和 .\train_data\val_list.txt`
+
+### Updated
+- `更新 src\configs\rec\PP-OCRv3\rec_carplate_train_gpu.yml 開始真實的訓練(5千張以內都還算是小型模型)耗時5個半小時(116筆真實照片+1050筆合成照片=總共1166筆)`
+- `更新 src\configs\rec\PP-OCRv3\rec_carplate_train_gpu.yml src\configs\rec\PP-OCRv3\rec_carplate_train_cpu.yml 參數註解`
+
+### Fixed
+- `修復 src\YOLOv8OCR.py 解決 ocr.ocr(np.array(corrected_img)) 辨識不到，cv2.imread 等價處理就可以；因為OpenCV / PIL 在讀檔時幫你做了「格式標準化」`
+
+
 ## [1.2.0] - 2026-01-16
 ### Updated
 - `src/.vscode/launch.json 新增 tools\infer_rec.py、tools\export_model.py、tools\infer\predict_rec.py`

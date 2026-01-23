@@ -71,7 +71,8 @@
 		"console": "integratedTerminal",
 		"args": [
 			"--image_dir", "./no_train_images/no_train_img1.jpg",
-			"--rec_model_dir", "./inference/PP-OCRv3_taiwan_car_rec/Student",
+			//"--rec_model_dir", "./inference/PP-OCRv3_taiwan_car_rec/Student",
+			"--rec_model_dir", "./ch_PP-OCRv3_rec_slim2_infer"
 			"--rec_image_shape", "3, 48, 320",
 			"--rec_char_dict_path", "./ppocr/utils/dict/dict_taiwan_car.txt",
 			"--use_gpu", "False"

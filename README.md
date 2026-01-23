@@ -163,14 +163,27 @@ Global.pretrained_model (預訓練/評估)： 它只載入權重（.pdparams）�
 ### 訓練 tools\train.py
 > python tools/train.py -c configs/rec/PP-OCRv3/en_PP-OCRv3_rec.yml
 
-是從頭訓練，還是續接(微調)取決於 .yml 的設定為何<br>
+是從頭訓練，還是續接取決於 .yml 的設定為何<br>
+在 PaddleOCR 的程式碼邏輯中，checkpoints 的優先級高於 pretrained_model。<br>
+如果你同時設定了兩者，程式會優先去讀 checkpoints。<br>
+
 #### 從頭訓練
 pretrained_model: ./pretrained/best_accuracy # 预训练模型位置，訓練權重，免加副檔名 [.pdparams]<br>
 checkpoints:  # 從頭訓練，維持空值<br>
 
-#### 續接(微調)
+#### 續接
 pretrained_model: # 續接時這裡可以留空<br>
 checkpoints: ./output/rec_ppocr_v3_distillation/latest # 检测点文件位置，可通过设置此选项恢复训练<br>
+
+| 功能 | checkpoints | pretrained_model |
+| - | - | - |
+| 主要用途 | 訓練意外中斷，要接回去跑。 | 已經練完一輪，要換參數或換資料微調。|
+| Epoch 計數 | 從記錄點繼續（如 820...1000）。 | 從 1 重新計算（如 1...500）。|
+| 學習率 (lr) | 延續當時的數值（通常極小）。 | 根據新設定重新觸發（如 0.0001）。 |
+| 優化器狀態 | 完全保留（ momentum 等）。 | 重新初始化。|
+
+<br>
+<br>
 
 訓練次數達到 .yml 設定檔中的 [eval_batch_step]<br>
 step 步數 範圍次數到達就會自動執行 eval.py<br>
