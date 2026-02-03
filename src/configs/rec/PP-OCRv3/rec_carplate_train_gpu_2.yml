@@ -3,19 +3,19 @@
 Global:
   debug: False
   use_gpu: True
-  epoch_num: 500
+  epoch_num: 100
   log_smooth_window: 20
   print_batch_step: 20 # 日志打印步数间隔，根据需要自行设置合适的数值
 
   save_model_dir: ./output/rec_ppocr_v3_distillation_2/  # 训练模型保存目录
-  save_epoch_step: 100  # 检查点保存轮次间隔，根据需要自行设置合适的数值
+  save_epoch_step: 20  # 检查点保存轮次间隔，根据需要自行设置合适的数值
   
   eval_batch_step: [0, 100] # 預設值 [0, 2000]，表示0~2000 內
   cal_metric_during_train: True
   
   
   # ch_PP-OCRv3_rec_slim_train 預訓練模型
-  pretrained_model: ./pretrained/best_accuracy # 预训练模型位置，訓練權重，免加副檔名 [.pdparams]
+  pretrained_model: ./output/rec_ppocr_v3_distillation/best_accuracy # 预训练模型位置，訓練權重，免加副檔名 [.pdparams]
   checkpoints:  # 從頭訓練，維持空值
     
   #pretrained_model: # 續接時這裡可以留空
@@ -44,7 +44,7 @@ Optimizer:
     # >學習率排程 Cosine / Piecewise 則一使用<---
     #>----------- Cosine 餘弦衰減-平滑曲線-------
     name: Cosine
-    learning_rate: 0.0001   # 使用初始學習率 0.0005
+    learning_rate: 0.0002   # 使用初始學習率 0.0005
     #<------------------------------------------
     #>----------- Piecewise 分段衰減-階梯式------
     #name: Piecewise
@@ -189,11 +189,13 @@ Train:
     - RecConAug:            # 隨機拼接增強，增加模型處理長短車牌的能力
         prob: 0.5
         ext_data_num: 2
-        image_shape: [48, 320, 3]
+        image_shape: [48, 128, 3]
         max_text_length: *max_text_length
     - MultiLabelEncode:
     - RecResizeImg:
-        image_shape: [3, 48, 320]
+        image_shape: [3, 48, 128]
+        infer_mode: False
+        padding: True       # 讓程式自動補齊比例，而不是硬拉伸
     - KeepKeys:
         keep_keys:
         - image
@@ -206,6 +208,7 @@ Train:
     batch_size_per_card: 24 #128
     drop_last: False # 數據這麼少，絕對不能 drop
     num_workers: 4 # 數據少，用 0 避免多線程切換開銷
+    use_shared_memory: True
 
 Eval:
   dataset:
@@ -219,7 +222,9 @@ Eval:
         channel_first: false
     - MultiLabelEncode:
     - RecResizeImg:
-        image_shape: [3, 48, 320]
+        image_shape: [3, 48, 128]
+        infer_mode: False
+        padding: True       # 讓程式自動補齊比例，而不是硬拉伸
     - KeepKeys:
         keep_keys:
         - image

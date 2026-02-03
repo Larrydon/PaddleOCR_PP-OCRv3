@@ -4,6 +4,22 @@
 
 更新日誌的格式將會基於 [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ==============================================================================
+## [1.4.0] - 2026-02-03
+### Fixed
+- `修正 YOLOv8OCR.py ocr初始化方式和流程
+- `1.用YOLO找出車牌並用OCR DET 找出車牌4點`
+- `2.4點座標做透視水平修正`
+- `2.偵測不到的或是交集不夠的，使用多角度辨識回傳最佳結果`
+- `3.OCR REC 辨識車牌`
+- `4.畫回原圖`
+
+### Fixed
+- `修正 字典 dict_taiwan_car.txt`
+
+### Added
+- `新增 OCR_Model_View.py 查看模型在辨識用的圖長什麼樣子和顯示長寬比例`
+
+
 ## [1.3.0] - 2026-01-20
 ### Added
 - `新增 src\AutoSplitTrainVal_List.py 用來自動按照8:2分成 .\train_data\train_list.txt 和 .\train_data\val_list.txt`

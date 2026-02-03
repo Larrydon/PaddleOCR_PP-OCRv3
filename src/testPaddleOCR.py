@@ -7,10 +7,12 @@ REC_MODEL_PATH = "./ch_PP-OCRv3_rec_slim2_infer"
 
 ocr = PaddleOCR(
     # lang="ch", # 可以拿掉，因為您已經指定了自定義模型和字典
-    use_angle_cls=False,
+    det=False,
+    rec=True,
+    cls=False,
     rec_model_dir=REC_MODEL_PATH,
-    use_gpu=False,
     rec_char_dict_path="./ppocr/utils/dict/dict_taiwan_car.txt",  # 必須指定字典
+    use_gpu=False,
 )  # 明確指定 ch_PP-OCRv3_rec_infer ch_PP-OCRv3_rec_slim2_infer
 # print("識別模型:", ocr.rec_model_config)
 

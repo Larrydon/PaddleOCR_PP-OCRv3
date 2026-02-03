@@ -10,11 +10,15 @@ ch_PP-OCRv3_rec_slim	slim量化版超轻量模型，支持中英文、数字识�
 [训练模型](https://paddleocr.bj.bcebos.com/PP-OCRv3/chinese/ch_PP-OCRv3_rec_slim_train.tar)
 <br>
 <br>
-<br>
-<br>
 參考來源:
 模型庫 https://www.paddleocr.ai/v2.10.0/ppocr/model_list.html#21<br>
 (docs\PaddleOCR-v2.10.0_PP-OCR_模型列表.mhtml)
+<br>
+<br>
+<br>
+YOLO物體偵測使用:<br>
+Car License plate Detector(YOLOv8s) [detectoryolov8s.pt](https://www.kaggle.com/models/shonirantoluwase/car-license-plate-detectoryolov8s)<br>
+(docs\Shoniran-Toluwase-Car-License-plate-Detector-YOLOv8s-Kaggle-www.kaggle.com.mhtml)
 <br>
 <br>
 <br>
@@ -150,6 +154,28 @@ images/202512171605560015_crop_0.jpg	外1743<br>
 
 >	完全沒在清單內，直接拿一張新照片來辨識。非清單內的獨立圖片，也是真實照片<br>
 
+<br>
+<br>
+
+### 字典(dict)
+**核心格式規範**
+一格一個字：每一行只能有一個字元，不可以有空格。<br>
+編碼格式：必須是 UTF-8 (無 BOM)。<br>
+換行符號：統一使用 LF (\n)，避免 Windows 的 CRLF (\r\n)。<br>
+檔案結尾：最後一個字元（如 -）之後，必須按一下 Enter 換行，但不可留空行。<br>
+
+**檢查字典**
+> cat -A ./ppocr/utils/dict/dict_taiwan_car.txt
+
+看到 0$ 是正確的。<br>
+看到 0^M$ 代表有 \r，必須刪除。<br>
+
+**暴力清洗字典\r，只留\n**
+> sed -i 's/\r//g' ./ppocr/utils/dict/dict_taiwan_car.txt
+
+<br>
+<br>
+
 ### 模型分為 訓練(train)/推論(infer)
 .pdparams：通常是訓練權重 (Student/Teacher Model) 的格式。(網絡結構)	预训练模型	動態圖模型<br>
 .pdiparams：通常是推論模型 (Inference Model) 的權重格式。(權重參數)	訓練完成的模型	靜態圖模型<br>
@@ -175,16 +201,37 @@ checkpoints:  # 從頭訓練，維持空值<br>
 pretrained_model: # 續接時這裡可以留空<br>
 checkpoints: ./output/rec_ppocr_v3_distillation/latest # 检测点文件位置，可通过设置此选项恢复训练<br>
 
-| 功能 | checkpoints | pretrained_model |
+| 功能 | checkpoints續接 | pretrained_model從新訓練/微調 |
 | - | - | - |
 | 主要用途 | 訓練意外中斷，要接回去跑。 | 已經練完一輪，要換參數或換資料微調。|
 | Epoch 計數 | 從記錄點繼續（如 820...1000）。 | 從 1 重新計算（如 1...500）。|
 | 學習率 (lr) | 延續當時的數值（通常極小）。 | 根據新設定重新觸發（如 0.0001）。 |
 | 優化器狀態 | 完全保留（ momentum 等）。 | 重新初始化。|
 
+核心總結<br>
+checkpoints：像是「午睡起來繼續寫作業」，適合沒寫完的情況。<br>
+pretrained_model：像是「考前針對弱點做題庫」，適合想突破的情況。<br>
+**pretrained_model從新訓練/微調**<br>
+資料學習後的權重是會遷移的，因此可以作到微調使用，前次訓練完的權重並不會浪費，而是可以基於訓練完成的基礎上持續微調
+
+=>	我會先使用 rec_carplate_train_gpu.yml 跑第一輪訓練看看結果好不好<br>
+	(不開TIA，CPU會號非常多資源，造成GPU空轉等待沒事做)<br>
+	再使用 rec_carplate_train_gpu_2.yml 跑第二輪增強訓練，增加「抗扭曲」加強<br>
+	，這時候再開啟TIA做微調訓練多跑個50~100輪就夠了，<br>
+	雖然開啟 TIA 還是會增加 CPU 負擔，但你的模型已經處於 「Acc 1.0 / Loss 極低」 的狀態，TIA 的運算會變得很平順。<br>
+	lr學習率的設定得看訓練策略，要洗掉重新記憶可以使用 0.001，<br>
+	若只是要緩慢的記住，不讓它「暴力」洗掉記憶可以嘗試 0.0001 或是 0.0005，<br>
+	通常使用續接時會連同優化器的狀態（Optimizer State）和目前的學習率步數一起讀取，所以不太需要調整<br>
+	<br>
+	由於PaddleOCR車牌辨識上，其車牌大小不會差異太大，<br>
+	也很固定長度比例(最多碼也就8碼) 所以<br>
+	RecConAug        # 隨機拼接增強，增加模型處理長短車牌的能力<br>
+	可以不用開啟，還可以減少拼接後亂辨識的問題。<br>
+
 <br>
 <br>
 
+#### log解讀，看懂訓練過程
 訓練次數達到 .yml 設定檔中的 [eval_batch_step]<br>
 step 步數 範圍次數到達就會自動執行 eval.py<br>
 讓最好的權重自動更新成 best_accuracy.pdparams<br>
@@ -219,6 +266,7 @@ save_epoch_step: 100<br>
 	[2026-01-07 16:01:48,068] ppocr INFO: save model in ./output/rec_ppocr_v3_distillation/iter_epoch_500<br>
 	[2026-01-07 16:01:48,068] ppocr INFO: best metric, acc: 0.12499984375019532, is_float16: False, norm_edit_dis: 0.4220245319931446, Teacher_acc: 0.24999968750039064, Teacher_norm_edit_dis: 0.44702450074318356, fps: 115.20755908972299, best_epoch: 500<br>
 
+#### 數據解讀
 rec_carplate_train_gpu.yml 所使用的模型<br>
 > 	您使用的是 DistillationModel (Student/Teacher 結構)<br>
 > 
@@ -226,7 +274,7 @@ rec_carplate_train_gpu.yml 所使用的模型<br>
   	name: DistillationModel	# 這裡直接指名使用「蒸餾模型」架構
   	algorithm: Distillation
 
-數據解讀：模型現在的實力(訓練結果跑驗證)<br>
+模型現在的實力(訓練結果跑驗證)<br>
 - acc: 0.1249 (12.5%) 準確率；這代表在你的 8 筆驗證資料中，只認對了 1 張。剩下的 7 張全都認錯了（OCR 的 Acc 要求是文字內容 100% 完全正確才算對）。<br>
 - norm_edit_dis: 0.422 這是「正規化編輯距離」。數值越接近 1 越好。0.42 代表平均來說，一張車牌如果你有 7 個字，它可能只認對了 2~3 個字，或者順序完全亂掉。<br>
 - Teacher_acc: 0.249 (25%) 老師模型（Teacher）認對了 2 張。這說明即便是結構更複雜的老師模型，目前的表現也很差。<br>
