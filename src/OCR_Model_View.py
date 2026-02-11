@@ -3,52 +3,56 @@ import numpy as np
 import os
 
 # 注意：模型輸入是 320 寬，48 高
-TARGET_H, TARGET_W = 48, 128
+TARGET_H, TARGET_W = 48, 192
 VIEW_IMG_FILE = "./my_synthetic_image.jpg"  # "./my_synthetic_image.jpg"
+SAVE_NAME = "model_padding_view.jpg"
 
 
-def visualize_paddle_input(
-    image_path, target_h=48, target_w=128, save_name="model_view.jpg"
-):
-    # 1. 讀取原始裁切照
+def get_real_transformation_report(image_path, target_h, target_w):
     img = cv2.imread(image_path)
-    if img is None:
-        print("找不到圖片，請檢查路徑")
+    if img is None: 
+        print("找不到檔案")
         return
 
-    # 2. 取得原始尺寸與比例
-    ori_h, ori_w = img.shape[:2]
-    ori_ratio = ori_w / ori_h  # 原始比例
+    # 1. 執行 Padding Resize 邏輯
+    h, w = img.shape[:2]
+    scale = target_h / h
+    new_w = int(w * scale)
+    new_w = min(new_w, target_w)
+    
+    resized_content = cv2.resize(img, (new_w, target_h), interpolation=cv2.INTER_CUBIC)
+    
+    # 2. 建立畫布並貼上內容
+    canvas = np.zeros((target_h, target_w, 3), dtype=np.uint8)
+    canvas[:, :new_w] = resized_content
+    
+    # 3. 計算真實變形率
+    ori_ratio = w / h
+	
+    # 縮放後內容比例 (在畫布上實際佔用的比例)
+    current_content_ratio = new_w / target_h
 
-    # 3. 計算模型目標比例
-    target_ratio = TARGET_W / TARGET_H  # 模型看到的真實比例 (例如 128/48 = 2.67)
+    # 真實變形率 = 縮放後比例 / 原始比例
+    # 1.00 代表完全沒變形
+    real_distortion = current_content_ratio / ori_ratio
 
-    # 4. 模擬 PaddleOCR 的 Resize 邏輯
-    # 注意：這裡模擬的是直接強拉 (Distortion)，而非 Padding 模式
-    img_resized = cv2.resize(img, (TARGET_W, TARGET_H), interpolation=cv2.INTER_LINEAR)
-
-    # 5. 計算變形率 (Distortion Rate)
-    # 如果值接近 1.0，代表比例保持得很好；偏離越多，字體變形越嚴重
-    distortion_rate = ori_ratio / target_ratio
-
-    # 6. 儲存結果
-    cv2.imwrite(save_name, img_resized)
-
-    print(f"--- 比例分析報告 ---")
-    print(f"原始尺寸: {ori_w}x{ori_h} (比例: {ori_ratio:.2f})")
-    print(f"模型輸入: {target_w}x{target_h} (比例: {target_ratio:.2f})")
-
-    if abs(1 - distortion_rate) < 0.1:
-        print(f"狀態: ✅ 比例基本維持 (變形率: {distortion_rate:.2f})")
+    # 5. 儲存圖片
+    cv2.imwrite(SAVE_NAME, canvas)
+    
+    # 終端機輸出報告
+    print(f"--- 最終影像真實報告 ---")
+    print(f"原始尺寸: {w}x{h} (比例: {ori_ratio:.2f})")
+    print(f"模型畫布: {target_w}x{target_h} (比例: {current_content_ratio:.2f})")
+    print(f"送入模型的真實變形率: {real_distortion:.2f}")
+    print(f"✅ 偵錯圖片已存為: {SAVE_NAME}")
+    
+    if 0.98 <= real_distortion <= 1.02:
+        print("狀態: ✅ 1:1 等比例送入，無變形。")
     else:
-        status = "拉長" if distortion_rate < 1 else "壓扁"
-        print(f"狀態: ⚠️ 嚴重變形 - 字體被{status} (變形率: {distortion_rate:.2f})")
-
-    print(f"可視化圖片已存為: {save_name}")
-
+        print(f"狀態: ⚠️ 存在變形 (誤差: {abs(1-real_distortion)*100:.1f}%)")
 
 # 調用範例
 # visualize_paddle_input("crop_0.jpg", target_h=48, target_w=128)
 
 # 請替換成您的合成照路徑
-visualize_paddle_input(VIEW_IMG_FILE, target_h=TARGET_H, target_w=TARGET_W)
+get_real_transformation_report(VIEW_IMG_FILE, TARGET_H, TARGET_W)
