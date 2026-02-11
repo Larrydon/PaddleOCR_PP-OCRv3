@@ -20,7 +20,7 @@
 		//CPU
 		//"args": ["-c", "configs/rec/PP-OCRv3/rec_carplate_train_cpu.yml"],
 		//GPU
-		"args": ["-c", "configs/rec/PP-OCRv3/rec_carplate_train_gpu.yml"],
+		"args": ["-c", "configs/rec/PP-OCRv3/rec_carplate_train_gpu_CTC.yml"],
 		"cwd": "${workspaceFolder}"
 	  },
 	  {
@@ -31,9 +31,9 @@
 		"console": "integratedTerminal",
 		"args": [
 		  "-c",
-		  "configs/rec/PP-OCRv3/rec_carplate_train_gpu.yml",
+		  "configs/rec/PP-OCRv3/rec_carplate_train_gpu_CTC.yml",
 		  "-o",
-		  "Global.pretrained_model=./output/rec_ppocr_v3_distillation/best_accuracy"
+		  "Global.pretrained_model=./output/rec_plate_ctc/best_accuracy"
 		]
 	  },
 	  {
@@ -44,10 +44,11 @@
 		"console": "integratedTerminal",
 		"args": [
 		  "-c",
-		  "configs/rec/PP-OCRv3/rec_carplate_train_gpu.yml",
+		  "configs/rec/PP-OCRv3/rec_carplate_train_gpu_CTC.yml",
 		  "-o",
-		  "Global.pretrained_model=./output/rec_ppocr_v3_distillation/best_accuracy",
-		  "Global.infer_img=./no_train_images/no_train_img1.jpg"
+		  "Global.pretrained_model=./output/rec_plate_ctc/best_accuracy",
+		  "Global.infer_img=./train_data/",
+		  "Global.infer_list=./train_data/val_list.txt"
 		]
 	  },
 	  {
@@ -58,9 +59,9 @@
 		"console": "integratedTerminal",
 		"args": [
 		  "-c",
-		  "configs/rec/PP-OCRv3/rec_carplate_train_gpu.yml",
+		  "./output/rec_plate_ctc/config.yml",
 		  "-o",
-		  "Global.pretrained_model=./output/rec_ppocr_v3_distillation/best_accuracy"
+		  "Global.pretrained_model=./output/rec_plate_ctc/best_accuracy"
 		]
 	  },
 	  {

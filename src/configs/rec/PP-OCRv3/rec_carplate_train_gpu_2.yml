@@ -28,7 +28,7 @@ Global:
   infer_img: doc/imgs_words/ch/word_1.jpg
   character_dict_path: ./ppocr/utils/dict/dict_taiwan_car.txt  
 
-  max_text_length: &max_text_length 16 #128 # 能够识别的最长文本长度，根据需要自行设置合适的数值
+  max_text_length: &max_text_length 16 #128 # 能够识别的最长文本长度，根据需要自行设置合适的数值，不可低於16 <SAR 模式會截斷>
   use_space_char: False # 是否识别空格字符
   infer_mode: False
   distributed: False # True 如果你的電腦只有一張顯卡，請確保：False 分散式模式在小數據上會浪費很多時間在進程間通訊
@@ -176,7 +176,7 @@ Train:
   dataset:
     name: SimpleDataSet
     data_dir: ./train_data/
-    ext_op_transform_idx: 1
+    #ext_op_transform_idx: 1  # 開啟 RecConAug 時，模型會隨機抓取兩張圖片拼接在一起來增加訓練難度。ext_op_transform_idx 的作用，就是告訴程式：從哪一個步驟開始對「被抓來拼接的那張圖」
     label_file_list:
     - ./train_data/train_list.txt
     transforms:
@@ -186,14 +186,14 @@ Train:
     - RecAug:  # 這是資料增強設定的核心！ 
         use_tia: True       # 開啟 TIA 幾何變換（模擬車牌歪斜、變形）
         aug_prob: 0.8       # 每一張圖有 80% 機率會被「變裝」，提高觸發增強的機率
-    - RecConAug:            # 隨機拼接增強，增加模型處理長短車牌的能力
-        prob: 0.5
-        ext_data_num: 2
-        image_shape: [48, 128, 3]
-        max_text_length: *max_text_length
+    # - RecConAug:            # 隨機拼接增強，增加模型處理長短車牌的能力，車牌結構固定，不適合隨機拼接
+    #     prob: 0.5
+    #     ext_data_num: 2
+    #     image_shape: [48, 192, 3]
+    #     max_text_length: *max_text_length
     - MultiLabelEncode:
     - RecResizeImg:
-        image_shape: [3, 48, 128]
+        image_shape: [3, 48, 192]
         infer_mode: False
         padding: True       # 讓程式自動補齊比例，而不是硬拉伸
     - KeepKeys:
@@ -222,7 +222,7 @@ Eval:
         channel_first: false
     - MultiLabelEncode:
     - RecResizeImg:
-        image_shape: [3, 48, 128]
+        image_shape: [3, 48, 192]
         infer_mode: False
         padding: True       # 讓程式自動補齊比例，而不是硬拉伸
     - KeepKeys:

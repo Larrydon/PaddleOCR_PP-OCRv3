@@ -3,12 +3,12 @@
 Global:
   debug: False
   use_gpu: True
-  epoch_num: 300
+  epoch_num: 800
   log_smooth_window: 20
   print_batch_step: 20 # 日志打印步数间隔，根据需要自行设置合适的数值
 
   save_model_dir: ./output/rec_ppocr_v3_distillation/  # 训练模型保存目录
-  save_epoch_step: 50  # 检查点保存轮次间隔，根据需要自行设置合适的数值
+  save_epoch_step: 100  # 检查点保存轮次间隔，根据需要自行设置合适的数值
   
   eval_batch_step: [0, 200] # 預設值 [0, 2000]，表示0~2000 內
   cal_metric_during_train: True
@@ -44,7 +44,7 @@ Optimizer:
     # >學習率排程 Cosine / Piecewise 則一使用<---
     #>----------- Cosine 餘弦衰減-平滑曲線-------
     name: Cosine
-    learning_rate: 0.001   # 使用初始學習率
+    learning_rate: 0.0005   # 使用初始學習率
     #<------------------------------------------
     #>----------- Piecewise 分段衰減-階梯式------
     #name: Piecewise
@@ -183,17 +183,17 @@ Train:
     - DecodeImage:
         img_mode: BGR
         channel_first: false
-    # - RecAug:  # 這是資料增強設定的核心！ 
-    #    use_tia: True       # 開啟 TIA 幾何變換（模擬車牌歪斜、變形）
-    #    aug_prob: 0.8       # 每一張圖有 80% 機率會被「變裝」，提高觸發增強的機率
-    # - RecConAug:            # 隨機拼接增強，增加模型處理長短車牌的能力
+    - RecAug:  # 這是資料增強設定的核心！ 
+        use_tia: True       # 開啟 TIA 幾何變換（模擬車牌歪斜、變形）
+        aug_prob: 0.8       # 每一張圖有 80% 機率會被「變裝」，提高觸發增強的機率
+    # - RecConAug:            # 隨機拼接增強，增加模型處理長短車牌的能力，車牌結構固定，不適合隨機拼接
     #     prob: 0.5
     #     ext_data_num: 2
-    #     image_shape: [48, 128, 3]
+    #     image_shape: [48, 192, 3]
     #     max_text_length: *max_text_length
     - MultiLabelEncode:
     - RecResizeImg:
-        image_shape: [3, 48, 128]
+        image_shape: [3, 48, 192]
         infer_mode: False
         padding: True       # 讓程式自動補齊比例，而不是硬拉伸
     - KeepKeys:
@@ -222,7 +222,7 @@ Eval:
         channel_first: false
     - MultiLabelEncode:
     - RecResizeImg:
-        image_shape: [3, 48, 128]
+        image_shape: [3, 48, 192]
         infer_mode: False
         padding: True       # 讓程式自動補齊比例，而不是硬拉伸
     - KeepKeys:

@@ -2,7 +2,7 @@ import re
 import matplotlib.pyplot as plt
 
 # 確保這個路徑指向您的訓練日誌檔案
-LOG_Dir = "./output/rec_ppocr_v3_distillation/"
+LOG_Dir = "./output/rec_plate_ctc/"
 LOG_FILE = LOG_Dir + "train.log"
 # 正則表達式：匹配包含 loss: X.XXXXX 的行
 # 這裡假設 loss 總是在 'loss:' 之後
