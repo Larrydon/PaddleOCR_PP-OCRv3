@@ -1,6 +1,10 @@
 import os
 import glob
-from YOLOv8OCR import process_single_image  # 匯入剛封裝的函數
+
+from sympy import true
+import YOLOv8OCR
+
+# from YOLOv8OCR import process_single_image  # 匯入剛封裝的函數
 import time
 
 # ================== 設定 ==================
@@ -20,6 +24,7 @@ def main():
         return
 
     print(f"🚀 開始批次處理，共 {len(image_files)} 張圖...")
+    YOLOv8OCR.Config.DEBUG_BatchRun_PRINT = True
     start_time = time.time()
 
     # 2. 逐一處理
@@ -28,7 +33,9 @@ def main():
         print(f"[{i+1}/{len(image_files)}] 正在處理: {img_name}")
 
         try:
-            results, saved_path = process_single_image(img_path, OUTPUT_FOLDER)
+            results, saved_path = YOLOv8OCR.process_single_image(
+                img_path, OUTPUT_FOLDER, debug=true
+            )
 
             # 顯示結果
             if results:

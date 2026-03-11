@@ -3,25 +3,30 @@
 Global:
   debug: False
   use_gpu: True
-  epoch_num: 500
+  epoch_num: 300
   log_smooth_window: 20
-  print_batch_step: 20
+  print_batch_step: 10
 
   save_model_dir: ./output/rec_plate_ctc/
-  save_epoch_step: 50
+  save_epoch_step: 100
 
-  eval_batch_step: [0, 200]
+  eval_batch_step: 200  #[0, 1000]
   cal_metric_during_train: True
 
-  pretrained_model: ./pretrained/best_accuracy
-  checkpoints:
+  pretrained_model: ./pretrained/best_accuracy  #./pretrained/taiwan_ctc
+  #pretrained_model: ./output/rec_plate_ctc/best_accuracy
+  checkpoints:  # 從頭訓練，維持空值
+    
+  #pretrained_model: # 續接時這裡可以留空
+  #checkpoints: ./output/rec_plate_ctc/iter_epoch_100 # 检测点文件位置，可通过设置此选项恢复训练
+
 
   save_inference_dir: ./inference/PP-OCRv3_plate_ctc/
   use_visualdl: False
   infer_img: doc/imgs_words/ch/word_1.jpg
 
   character_dict_path: ./ppocr/utils/dict/dict_taiwan_car.txt
-  max_text_length: 10        # 🚩 車牌專用
+  max_text_length: &max_len_tw 12        # 🚩 台灣車牌專用，定義錨點 &max_len_tw
   use_space_char: False
 
   infer_mode: False
@@ -38,7 +43,13 @@ Optimizer:
     # >學習率排程 Cosine / Piecewise 則一使用<---
     #>----------- Cosine 餘弦衰減-平滑曲線-------
     name: Cosine
-    learning_rate: 0.001   # 使用初始學習率
+    learning_rate: 0.0001  # 使用初始學習率 0.0005，微調（Fine-tuning）階段，設定在 0.0001 ~ 0.0005 之間
+    warmup_epoch: 5
+
+    # # 🚩 降到極低，保護預訓練特徵不被毀滅
+    # learning_rate: 0.00005  
+    # # 🚩 增加 Warmup Epoch，讓模型慢慢適應新字典索引
+    # warmup_epoch: 20
     #<------------------------------------------
     #>----------- Piecewise 分段衰減-階梯式------
     #name: Piecewise
@@ -46,27 +57,32 @@ Optimizer:
     #values : [0.0005, 0.00005]
     #<------------------------------------------
 
-    warmup_epoch: 5
+    
   regularizer:
     name: L2
-    factor: 3.0e-05
+    #factor: 3.0e-05
+    factor: 5.0e-05        # 稍微提高正則化，防止過擬合
 
 
 Architecture:
   model_type: rec
-  algorithm: CRNN
-
+  algorithm: SVTR_LCNet  # PP-OCRv3 默認使用的算法 SVTR_LCNet # CRNN
+  Transform:
   Backbone:
     name: MobileNetV1Enhance
     scale: 0.5
+    model_name: small
     last_conv_stride: [1, 2]
     last_pool_type: avg
     last_pool_kernel_size: [2, 2]
 
   Neck:
     name: SequenceEncoder
-    encoder_type: rnn
-    hidden_size: 96
+    encoder_type: svtr
+    dims: 64
+    depth: 2
+    hidden_dims: 120
+    use_guide: True
 
   Head:
     name: CTCHead
@@ -77,6 +93,7 @@ Loss:
 
 PostProcess:
   name: CTCLabelDecode
+  max_text_length: *max_len_tw
 
 Metric:
   name: RecMetric
@@ -94,15 +111,21 @@ Train:
           img_mode: BGR
           channel_first: false
 
-      - RecAug:
-          use_tia: True
-          aug_prob: 0.8
-
       - CTCLabelEncode:
-          max_text_length: 8
+          max_text_length: *max_len_tw
+      
+      - RecConAug:  # 隨機剪切拼接，對抗死背
+          prob: 0.5
+          ext_data_num: 2
+          image_shape: [48, 320, 3]
+          max_text_length: *max_len_tw
+
+      - RecAug:
+          use_tia: True  # 👈 改成 True，這會對文字進行細微的扭曲（如波浪、拉伸）
+          aug_prob: 0.5
 
       - RecResizeImg:
-          image_shape: [3, 48, 192]
+          image_shape: [3, 48, 320]
           infer_mode: False
           padding: True
 
@@ -115,7 +138,7 @@ Train:
     shuffle: true
     batch_size_per_card: 32
     drop_last: False
-    num_workers: 8
+    num_workers: 4
     use_shared_memory: True
 
 Eval:
@@ -130,10 +153,10 @@ Eval:
           channel_first: false
 
       - CTCLabelEncode:
-          max_text_length: 8
+          max_text_length: *max_len_tw
 
       - RecResizeImg:
-          image_shape: [3, 48, 192]
+          image_shape: [3, 48, 320]
           infer_mode: False
           padding: True
 

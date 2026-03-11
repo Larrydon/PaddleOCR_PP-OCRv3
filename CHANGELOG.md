@@ -4,6 +4,21 @@
 
 更新日誌的格式將會基於 [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ==============================================================================
+======================================================
+## [1.6.0] - 2026-03-11
+### Added
+- `之前的CTC訓練都是從頭訓練，改成抽取出 官方 ch_PP-OCRv3_rec 另存成CTC單一模組使用 (student_model_stripped.py)`
+- `新增檢查抽取CTC的模型是否正確 (check_model.py)`
+
+### Fixed
+- `CTC訓練 max_text_length=12 長度需要用到12碼`
+- `重新使用 圖檔大小為 320x48，並且不做任何處理，讓PaddleOCR自行縮放(padding:true)`
+- `OCR_Model_View.py 修正模擬模型OCR`
+
+### Changed 當更動了既有的功能
+- `YOLO 尋找車牌改成 YOLO-Pose`
+
+
 ## [1.5.0] - 2026-02-11
 ### Fixed
 - `棄用蒸餾訓練，改成單純 CTC訓練 image_shape=[3, 48, 192]，max_text_length 長度可以改成10碼就好`
