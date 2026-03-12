@@ -25,7 +25,8 @@ else:
     print("✗ 識別預測器載入失敗!!!")
 
 # img_path = "./word_10.png"
-img_path = "./model_padding_view.jpg"
+# img_path = "./model_padding_view.jpg"	# 模擬PaddleOCR訓練使用的圖檔
+img_path = "./my_synthetic_image.jpg"
 result = ocr.ocr(img_path, det=False, cls=False)
 for idx in range(len(result)):
     res = result[idx]
