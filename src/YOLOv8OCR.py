@@ -825,10 +825,6 @@ def DoOCR(
     orig_img,
     draw_result,
     idx,
-    x1,
-    y1,
-    x2,
-    y2,
     plate_box,
     debug_pose_img,
     debug_pose_draw,
@@ -876,11 +872,14 @@ def DoOCR(
     plate_text, avg_score = parse_rec_result(final_ocr_res)
 
     # 存入摘要結果與畫圖
-    summary_results.append({"plate": plate_text, "score": avg_score})
+    pts_str = ", ".join([f"({p[0]},{p[1]})" for p in pts])
+    summary_results.append(
+        {"plate": plate_text, "score": avg_score, "coordinate": pts_str}
+    )
     #
     # ---------- 畫回原圖 ----------
     if Config.DEBUG_PRINT:
-        draw_ocr_debug(font_default, draw_result, plate_text, avg_score, x1, y1, x2, y2)
+        draw_ocr_debug(font_default, draw_result, plate_text, avg_score, pts)
 
     if not plate_text:
         bFoundLPR = False
@@ -1134,10 +1133,6 @@ def process_single_image(img_path, output_dir="results", debug=false):
                 orig_img,
                 draw,
                 idx,
-                x1,
-                y1,
-                x2,
-                y2,
                 plate_box,
                 debug_pose_img,
                 debug_pose_draw,
@@ -1199,7 +1194,7 @@ def process_single_image(img_path, output_dir="results", debug=false):
         #     draw_ocr_debug(font_default, debug_pose_draw, plate_text, avg_score, x1, y1, x2, y2)
 
     # 絕對高度很小，可能是切好的車牌，直接OCR (例如高度小於 200 像素)
-    is_likely_cropped_plate = (img_W <= 320) and (img_H < 200)
+    is_likely_cropped_plate = (img_W <= OCR_WIDTH) and (img_H < 200)
     if is_likely_cropped_plate and not bFoundLPR:
         print(f"✨ YOLO-Post找不到4點，直接整張圖執行透視校正")
 
@@ -1213,10 +1208,6 @@ def process_single_image(img_path, output_dir="results", debug=false):
             orig_img,
             draw,
             0,
-            x1,
-            y1,
-            x2,
-            y2,
             plate_box,
             debug_pose_img,
             debug_pose_draw,
@@ -1225,7 +1216,7 @@ def process_single_image(img_path, output_dir="results", debug=false):
         )
 
     # ================== 輸出 ==================
-    if bFoundLPR == false:
+    if not bFoundLPR:
         print(f"🤷‍♂️ Cannot find any LPR 🤷‍♀️")
 
     if Config.DEBUG_PRINT:
@@ -1264,36 +1255,68 @@ def imread_action_to_OCR(corrected, idx):
     return pocr.ocr(ocr_input, det=False, cls=False)
 
 
-def draw_ocr_debug(font_default, draw, plate_text, avg_score, x1=0, y1=0, x2=0, y2=0):
-    # ===== 根據 OCR 信心畫框顏色 =====
-    if avg_score < OCR_SCORE_THRESH:
-        draw.rectangle([x1, y1, x2, y2], outline="orange", width=3)
-
-        draw.text(
-            (x1, max(0, y1 - 25)),
-            f"OCR low ({avg_score:.2f})",
-            fill="yellow",
-            font=font_default,
-        )
+def draw_ocr_debug(font_default, draw, plate_text, avg_score, pts=None):
+    # 如果 pts 為空或全 0 的處理邏輯
+    if not pts or all(p == (0, 0) for p in pts):
+        text_x, text_y = 0, 0
     else:
-        draw.rectangle([x1, y1, x2, y2], outline="red", width=3)
-        draw.text(
-            (x1, max(0, y1 - 25)),
+        # 取得多邊形的左上邊界點
+        text_x = min(p[0] for p in pts)
+        text_y = min(p[1] for p in pts)
+
+        # ===== 根據 OCR 信心畫框顏色 =====
+        if avg_score < OCR_SCORE_THRESH:
+            # draw.rectangle([x1, y1, x2, y2], outline="orange", width=3)
+            draw.polygon(pts, outline="orange", width=3)
+
+            # draw.text(
+            #     (x1, max(0, y1 - 25)),
+            #     f"OCR low ({avg_score:.2f})",
+            #     fill="yellow",
+            #     font=font_default,
+            # )
+            draw.text(
+                (text_x, max(0, text_y - 25)),  # 動態計算文字位置
+                f"OCR low ({avg_score:.2f})",
+                fill="yellow",
+                font=font_default,
+            )
+        else:
+            # draw.rectangle([x1, y1, x2, y2], outline="red", width=3)
+            draw.polygon(pts, outline="red", width=3)
+
+            # draw.text(
+            #     (x1, max(0, y1 - 25)),
+            #     f"{plate_text} ({avg_score:.2f})",
+            #     fill="yellow",
+            #     font=font_default,
+            # )
+            draw.text(
+                (text_x, max(0, text_y - 25)),  # 動態計算文字位置
+                f"{plate_text} ({avg_score:.2f})",
+                fill="yellow",
+                font=font_default,
+            )
+
+        # draw_text_with_outline(
+        #     draw,
+        #     (x1, max(0, y1 - 25)),
+        #     f"{plate_text} ({avg_score:.2f})",
+        #     font_default,
+        # )
+        draw_text_with_outline(
+            draw,
+            (text_x, max(0, text_y - 25)),
             f"{plate_text} ({avg_score:.2f})",
-            fill="yellow",
-            font=font_default,
+            font_default,
         )
 
-    draw_text_with_outline(
-        draw,
-        (x1, max(0, y1 - 25)),
-        f"{plate_text} ({avg_score:.2f})",
-        font_default,
-    )
-
-    print(
-        f"✅ 辨識結果: {plate_text} | 置信度: {avg_score:.4f} | 座標: [{x1},{y1},{x2},{y2}]"
-    )
+    # print(
+    #     f"✅ 辨識結果: {plate_text} | 置信度: {avg_score:.4f} | 座標: [{x1},{y1},{x2},{y2}]"
+    # )
+    # 將 [(x0,y0), (x1,y1), (x2,y2), (x3,y3)] 轉為字串格式
+    pts_str = ", ".join([f"({p[0]},{p[1]})" for p in pts])
+    print(f"✅ 辨識結果: {plate_text} | 置信度: {avg_score:.4f} | 座標: [{pts_str}]")
 
 
 # 這裡保留一個測試區塊，當你直接執行 YOLOv8OCR.py 時才會跑
