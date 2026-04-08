@@ -32,7 +32,7 @@ OCR_HIGHT = 48
 
 FONT_TEXT = "./NotoSansCJKtc-Regular.otf"
 # DET_MODEL_PATH = "./ocr_models/det/ch_PP-OCRv3_det_slim2_infer"
-REC_MODEL_PATH = "./ocr_models/rec/ch_PP-OCRv3_rec_slim2_infer"
+REC_MODEL_PATH = "./ocr_models/rec/ch_PP-OCRv3_TW_CTC_infer"
 os.makedirs(DEBUG_DIR, exist_ok=True)
 
 
